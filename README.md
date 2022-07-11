@@ -1,6 +1,10 @@
 # sci-RegulatoryClusteringModel
 [![PyPI](https://img.shields.io/pypi/v/scircm)](https://pypi.org/project/scircm/)
 
+## Tutorial
+
+See R tutorial in this folder: https://github.com/ArianeMora/scircm/blob/main/examples/
+
 ## Install
 
 #### R version
