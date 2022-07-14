@@ -18,45 +18,80 @@
 ##
 ## ---------------------------
 
-
-#' sircleMotif
+#' sircleMotifFimo
 #'
-#' Uses dorothea to find TFs enriched in clusters
+#' Uses FIMO to predict TF binding and then finds enrichment in clusters.
 #'
-#' @param clusterGeneId Column name with the gene identifier
-#' @param doroFile Filename/path of the file from Dorothea which has A,B,C,D relationships
+#' @param geneId Column name with the gene identifier
+#' @param fimoFilename Filename/path of the output from fimo (usually fimo.tsv)
 #' @param sircleRCMFilename Filename/path of the output from sircleRCM
 #' @param TFPadjCol Column name of the padjusted value in the sircleRCMFilename file (i.e. your RNAseq, or your protein p column)
 #' @param TFValueCol Column name of  rna value for the TF (could also use the proteomics logfc)
-#' @param TargetPadjCol Column name of the padjusted value in the sircleRCMFilename file (i.e. your RNAseq, or your protein p column)
-#' @param TargetValueCol Column name of  rna value for the TF (could also use the proteomics logfc)
-#' @param RegulatoryLabel Column name of the regulatory labels
-#' @param TFInDataset \emph{Optional: } Whether or not you require the TF to be expressed in the dataframe
-#' @param doroLevel \emph{Optional: } level(s) of doro as a list \strong{Default=c("A")}
-#' @param clusters \emph{Optional: } clusters to investigate \strong{Default=c("MDS", "MDE", "TPDE", "TPDS")}
-#' @param outputFilename  \emph{Optional: } Filename for the output file.
-#' @param outputDir  \emph{Optional: } Full path for output directory.
+#' @param pDisplayCutoff Cutoff for the clusters (only returns results less than this, usually 0.05)
+#' @param TFInDataset Whether or not you require the TF to be expressed in the dataframe
+#' @param fimoPcol Column name of p or q value used to filter fimo results(q-value for adjusted or p-value for un-adj)
+#' @param regLabels Column name of the regulatory labels
+#' @param outputFilename Filename for the output file.
 #' @return scimo an instance of the scimo package
+#' @export
+sircleMotifFimo <- function(geneId, fimoFilename, sircleRCMFilename, TFPadjCol, TFValueCol,
+                        pDisplayCutoff=0.05, TFInDataset=T, fimoPcol="p-value", outputDir="",
+                        regLabels="RegulatoryLabels", outputFilename="SiRCle-motif.csv") {
+
+  scimo <- scimotf$SciMotf(fimoFilename,  # fimo.tsv (here you can put in the different files 2500bp, 100bp)
+                           sircleRCMFilename,  # output from RCM in the first section
+                           regLabels,           # Column name of the regulatory labels from the earlier section
+                           geneId,                     # gene identifier we have been using
+                           TFPadjCol,                      # p value for the TF (could also use the value from the proteomics)
+                           TFValueCol,                     # rna value for the TF (could also use the proteomics logfc)
+                           outputDir,                          # output directory
+                           tf_in_dataset=TFInDataset,  # Whether or not you require the TF to be expressed in the dataframe
+                           fimo_pcol=fimoPcol,           # p or q value used to filter fimo results
+                           cluster_pcutoff=pDisplayCutoff)          # cutoff for the clusters (only returns results less than this)
+  m_df <- scimo$run()  # Run the motif finding for each cluster
+  scimo$u$save_df(m_df, outputFilename)
+  return(scimo)
+}
+
+#' sircleMotif
+#'
+#' Uses known TF interactions from DoRoThea and then finds enrichment of TF-Target relationships in clusters.
+#'
+#' @param clusterGeneId Column name with the gene identifier (note this must match the TF ids used in DoRoTHea i.e. gene name)
+#' @param doroFile Filename/path of the output from Dorothea 
+#' @param sircleRCMFilename Filename/path of the output from sircleRCM
+#' @param TFPadjCol Column name of the padjusted value in the sircleRCMFilename file (i.e. your RNAseq, or your protein p column)
+#' @param TFValueCol Column name of  rna value for the TF (could also use the proteomics logfc)
+#' @param pDisplayCutoff Cutoff for the clusters (only returns results less than this, usually 0.05)
+#' @param TFInDataset Whether or not you require the TF to be expressed in the dataframe
+#' @param doroLevel level(s) from Dorothea (i.e. A - D) see DoRoThea for more info.
+#' @param clusters clusters to test for enrichment.
+#' @param outputFilename Filename for the output file.
+#' @param ouputDir Directory for saving
+#' @param plotOn Whether or not to plot the results
+#' @return DF of the results
 #' @export
 sircleMotif <- function(clusterGeneId, doroFile, sircleRCMFilename, TFPadjCol, TFValueCol, TargetPadjCol, TargetValueCol,
                         RegulatoryLabel, TFInDataset=T, doroLevel=c("A"), clusters=c("MDS", "MDE", "TPDE", "TPDS"), 
-                        outputFilename="SiRCle-motif.csv", outputDir="") {
+                        outputFilename="SiRCle-motif.csv", outputDir="", plotOn=T) {
   motf <<- import("scimotf")    # Make global
-  scimo <- motf$SciMotf_Doro(doroFile,  # fimo.tsv (here you can put in the different files 2500bp, 100bp)
-                             sircleRCMFilename,  # output from RCM in the first section
-                             geneId,                     # gene identifier we have been using
-                             TFPadjCol,                      # p value for the TF (could also use the value from the proteomics)
-                             TFValueCol,                     # rna value for the TF (could also use the proteomics logfc)
-                             TargetPadjCol,
-                             TargetValueCol,
-                             outputDir,                          # output directory
+  scimo <- motf$SciMotf_Doro(doro_file=doroFile,  # fimo.tsv (here you can put in the different files 2500bp, 100bp)
+                             cluster_file=sircleRCMFilename,  # output from RCM in the first section
+                             cluster_gene_id=clusterGeneId,                     # gene identifier we have been using
+                             padj_protein=TFPadjCol,                      # p value for the TF (could also use the value from the proteomics)
+                             logfc_protein=TFValueCol,                     # rna value for the TF (could also use the proteomics logfc)
+                             padj_rna=TargetPadjCol,
+                             logfc_rna=TargetValueCol,
+                             output_dir=outputDir,                          # output directory
                              tf_in_dataset=TFInDataset  # Whether or not you require the TF to be expressed in the dataframe
   )          # cutoff for the clusters (only returns results less than this)
   m_df <- scimo$run(as.list(doroLevel), rcm_clusters=as.list(clusters))  # Run the motif finding for each cluster
-  #motf$plot_cluster_tf('scimotif_DORO.csv', save_fig=T)
+  write.csv(m_df, outputFilename) 
+  if (plotOn == T) {
+    motf$plot_cluster_tf(outputFilename, save_fig=T)
+  }
   return(as.data.frame(m_df))
 }
-
 
 #' sircleMotifAddInfo
 #'
