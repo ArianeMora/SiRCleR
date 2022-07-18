@@ -94,9 +94,9 @@ proteinFile <- paste0(data_dir, 'CPTAC_protein_S4.csv')
 methFile <- paste0(data_dir, 'CPTAC_cpg_S4.csv')
 rnaFile <- paste0(data_dir, 'CPTAC_RNA_S4.csv')
 
-write.csv(rcm_df[, c(geneId, methSamples$FullLabel)], 'CPTAC_cpg_S4.csv')
-write.csv(rcm_df[, c(geneId, rnaSamples$FullLabel)], 'CPTAC_RNA_S4.csv')
-write.csv(rcm_df[, c(geneId, proteinSamples$FullLabel)], 'CPTAC_protein_S4.csv')
+write.csv(rcm_df[, c(geneId, methSamples$FullLabel)],  paste0(data_dir, 'CPTAC_protein_S4.csv'))
+write.csv(rcm_df[, c(geneId, rnaSamples$FullLabel)], paste0(data_dir, 'CPTAC_cpg_S4.csv'))
+write.csv(rcm_df[, c(geneId, proteinSamples$FullLabel)], paste0(data_dir, 'CPTAC_RNA_S4.csv'))
 
 sampleLabelColumn <- "FullLabel"
 conditionColumn <- "CondId"
