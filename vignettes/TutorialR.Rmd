@@ -1,0 +1,139 @@
+---
+title: "SiRCle tutorial R"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{SiRCle tutorial R}
+  %\VignetteEncoding{UTF-8}
+---
+
+## First create an environment 
+
+Note if your computer has an old version of python (i.e. < 3.8) the machine learning might not work, so would recommend installing anaconda, look into reticulate for more details.
+
+https://rstudio.github.io/reticulate/articles/versions.html
+```{r}
+# install.packages("reticulate)
+library("reticulate")
+virtualenv_create(
+      envname = "scircm",
+      python = NULL,
+      packages = "scircm",
+      system_site_packages = getOption("reticulate.virtualenv.system_site_packages",
+                                       default = FALSE)
+    )
+
+```
+## Install the R package
+
+```{r}
+#install.packages("devtools")
+library(devtools)
+install_github("ArianeMora/SiRCleR")
+library(sircle)
+```
+
+### SiRCle tutorial in R
+
+Note we assume your methylation CpGs map to a single gene, if they don't  you'll need to filter them.
+
+```{r}
+data_dir <- 'data/'
+
+protFile <- paste0(data_dir, 'prot_DE_Stage IV_sircle.csv')
+rnaFile <- paste0(data_dir, 'rna_DE_Stage IV_sircle_renamed-cols.csv')
+methFile <- paste0(data_dir, 'filtered_cpg_DE_Stage IV_sircle.csv')
+geneId <- 'ensembl_gene_id'
+
+sircleFileName <- "SircleR-RCM.csv"
+
+#logFC_rna = column name in your RNA file that has your RNA logFC (same for the protein and CpG)
+#padj_rna = column name in your RNA file that has your padj value (same for protein and CpG)
+#NOTE: these need to be unique from one another since we merge the datasets, if they aren't, you need
+#to update your csv files.
+#Lastly: ensembl_gene_id this is the gene ID column, All must use the same identifier, and this must be
+#labelled the same in each file, if it isn't, update your column names before running.
+
+# Run the sircle RCM this may take some time
+rcm <- sircleRCM(rnaFile, methFile, protFile, geneId,  "logFC_rna", "padj_rna", "CpG_Beta_diff", "padj_meth", "logFC_protein", "padj_protein",
+                 outputFileName = sircleFileName, 
+                 envName="scircm")
+
+# Plot the sircle function
+sirclePlot(sircleFileName, regLabels="Regulation_Grouping_2") 
+
+# Run ORA on the groups
+sircleORAHuman(sircleFileName, "entrezgene_id", "Regulation_Grouping_2")
+
+
+```
+## Now you have the regulatory clusters you can perform comparisons between groups
+
+Here we train (or load from saved) a VAE and then perform a comparison on two groups of patients.
+
+```{r}
+# VAE on two groups
+
+rcmFile <- sircleFileName
+
+rcm_df <- read.csv(sircleFileName)
+
+proteinSampleFile <- paste0(data_dir, "prot_sample_data_Stage IV_sircle.csv")
+methSampleFile <- paste0(data_dir, "cpg_sample_data_Stage IV_sircle.csv")
+rnaSampleFile <- paste0(data_dir, "rna_sample_data_Stage IV_sircle.csv")
+patientSampleFile <- paste0(data_dir, "clinical_CPTAC_TCGA.csv") # Should include all patients
+
+# We need to get the columns we're interested from the RCM file for each 
+# this is just also so we can look at the CSV files separately.
+proteinSamples <- read.csv(proteinSampleFile)
+rnaSamples <- read.csv(rnaSampleFile)
+methSamples <- read.csv(methSampleFile)
+
+# Save each output to a csv file 
+proteinFile <- paste0(data_dir, 'CPTAC_protein_S4.csv')
+methFile <- paste0(data_dir, 'CPTAC_cpg_S4.csv')
+rnaFile <- paste0(data_dir, 'CPTAC_RNA_S4.csv')
+
+write.csv(rcm_df[, c(geneId, methSamples$FullLabel)], 'CPTAC_cpg_S4.csv')
+write.csv(rcm_df[, c(geneId, rnaSamples$FullLabel)], 'CPTAC_RNA_S4.csv')
+write.csv(rcm_df[, c(geneId, proteinSamples$FullLabel)], 'CPTAC_protein_S4.csv')
+
+sampleLabelColumn <- "FullLabel"
+conditionColumn <- "CondId"
+patientIdColumn <- "SafeCases"
+RegulatoryLabel <- "Regulation_Grouping_2"
+
+casesForTraining <- c('C3L.00011', 'C3L.00096', 'C3L.01287', 'C3N.00149', 'C3N.00150',
+       'C3N.00194', 'C3N.00390', 'C3N.01200', 'C3N.01220')
+
+# Training
+sv <- makeSircleStatModel(rcmFile, patientSampleFile, methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile, sampleLabelColumn, conditionColumn, patientIdColumn, NULL, RegulatoryLabel, fromSaved=F, casesForTraining=casesForTraining, outputFolder=data_dir, envName="scircm", runName="Rversion")
+
+# Loading a saved version (just changed the fromSaved flag)
+sv <- makeSircleStatModel(rcmFile, patientSampleFile, methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile, sampleLabelColumn, conditionColumn, patientIdColumn, NULL, RegulatoryLabel, fromSaved=T, casesForTraining=casesForTraining, outputFolder=data_dir, envName="scircm", runName="Rversion")
+
+# Now you can run stats
+statsDf <- runSircleStats(sv, "gender", "Female", "Male")
+statsDf[statsDf['Integrated pval (Male-Female)'] < 0.05] # E.g we can look at things now
+
+```
+
+### TF analysis using Dorothea
+
+```{r}
+# TF analysis
+doroFile <- paste0(data_dir, 'dorothea_hs_ABCD.csv')
+TFPadjCol <- 'padj_rna'
+TFValueCol <- 'logFC_rna'
+TargetPadjCol <- 'padj_rna'
+TargetValueCol <- 'logFC_rna'
+sircleRCMFilename <- paste0(data_dir, 'RCM.csv')
+outputDir <- data_dir
+clusterGeneId <- "external_gene_name" # This has to match the gene names in doro file
+m_df <- sircleMotif(clusterGeneId, doroFile, sircleRCMFilename, TFPadjCol, TFValueCol, TargetPadjCol, TargetValueCol, "Regulation_Grouping_2",
+                     doroLevel=c("A"), clusters=c("TMDE", "TMDS", "MDS", "MDE", "TPDE", "TPDS"), TFInDataset=F, outputDir=data_dir, plotOn=T)
+
+
+```
+
+
