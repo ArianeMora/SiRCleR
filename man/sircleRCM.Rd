@@ -69,7 +69,7 @@ sircleRCM(
 
 \item{backgroundMethod}{\emph{Optional: } Background method (NEED Description for each one here) \strong{Default="P|(M&R)"}}
 
-\item{fileSep}{\emph{Optional: } Separator for files i.e. expecting CSV's however if they are all TSVs you can change this to "\t" \strong{Default=","}}
+\item{fileSep}{\emph{Optional: } Separator for files i.e. expecting CSV's however if they are all TSVs you can change this \strong{Default=","}}
 
 \item{nonCodingGeneList}{\emph{Optional: } List of genes that are annotated to be non-coding related \strong{Default=NULL}}
 

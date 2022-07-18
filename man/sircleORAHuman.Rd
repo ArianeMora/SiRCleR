@@ -29,9 +29,6 @@ sircleORAHuman(
 
 \item{qvalueCutoff}{\emph{Optional: } q value cutoff from ORA \strong{default: 0.2}}
 }
-\value{
-
-}
 \description{
 Uses encrichGo to run ORA on each of the clusters as defined by the regulatory labels (ON HUMAN)
 }

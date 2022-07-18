@@ -13,9 +13,6 @@ sirclePlot(filename, regLabels = "RegulatoryLabels", fileType = "pdf")
 
 \item{figType}{\emph{Optional: } File ending for the saved figures \strong{Default="pdf"}}
 }
-\value{
-
-}
 \description{
 Uses scircm to and plots a circle plot of the sircle regulatory groups.
 }

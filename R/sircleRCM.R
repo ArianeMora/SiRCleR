@@ -18,6 +18,129 @@
 ##
 ## ---------------------------
 
+
+
+#' sircleVAE
+#'
+#' Uses scircm to compute the regulatory clustering model.
+#' @param rcmFile Output from running sircleRCM
+#' @param patientSampleFile File which has columns with the sample information
+#' @param methFile File which has the data from the DNA methylation, this should be already filtered to be a single value (e.g. CpG beta value) for each gene, with the gene ID as the rownames of this file, and the columns associated with a specific samples' values
+#' @param methSampleFile File with the sample data corresponding to the samples in the methFile (i.e. is the sample tumour or normal, what other meta info you have)
+#' @param rnaFile File which has the data from the RNAseq, expect it to be normalised (e.g. log2(TMM + 1), should use the same gene IDs as in the methylation file
+#' @param rnaSampleFile File with the sample data corresponding to the samples in the rnaFile (i.e. is the sample tumour or normal, what other meta info you have)
+#' @param proteinFile File which has the data from the proteomics, this should be already be normalised and associated to genes, with the gene ID as the rownames of this file, and the columns associated with a specific samples' values
+#' @param proteinSampleFile File with the sample data corresponding to the samples in the proteinFile (i.e. is the sample tumour or normal, what other meta info you have)
+#' @param geneId  Gene ID column name in you dataframe
+#' @param sampleLabelColumn  Column name in each of the sample files which corresponds to the sample label in the respective file (e.g. the label which has the column names in e.g. proteinFile, this has to be the same in all of your sample DFs)
+#' @param conditionColumn  Column name in each of the sample files which corresponds to the sample label in the respective file (e.g. the label which has the column names in e.g. proteinFile, this has to be the same in all of your sample DFs)
+#' @param patientIdColumn  Column name in each of the sample files which corresponds to the sample label in the respective file (e.g. the label which has the column names in e.g. proteinFile, this has to be the same in all of your sample DFs)
+#' @param configVAEFile Filename of the config.json (see scivae for description.)
+#' @param RegulatoryLabel Regulatory label of interest (e.g. "Regulation_Grouping_1", "Regulation_Grouping_2", "Regulation_Grouping_3" )
+#' @param fromSaved \emph{Optional: } Whether you're reloading from a saved run \strong{Default=F}
+#' @param casesForTraining \emph{Optional: } If you're training this is necessary it is a list of case IDs (in the column patientIDcolumn) \strong{Default=NULL}
+#' @param outputFolder \emph{Optional: } path to the folder wih the data \strong{Default=NULL}
+#' @param runName \emph{Optional: } Name of the run, useful for reloading saved versions \strong{Default="VAE"}
+#' @param normalise \emph{Optional: } How to normalise the data \strong{Default="rows"}
+#' @param missingMethod \emph{Optional: } How to fill in the missing data. \strong{Default="mean"}
+#' @param verbose \emph{Optional: } How to fill in the missing data. \strong{Default=T}
+#' @param envName \emph{Optional: } Name of your previously setup python virtual environment \strong{Default=NULL}
+#' @param condaEnvName \emph{Optional: } Name of your previously setup python conda environment \strong{Default=NULL}
+#' @param envPath \emph{Optional: } Path as a string to your previously setup python \strong{Default=NULL}
+#' @return sv a trained model for performing statistics
+#' @export
+#'
+makeSircleStatModel <- function(rcmFile, patientSampleFile,
+                                methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile,
+                                sampleLabelColumn, conditionColumn, patientIdColumn, configVAEFile, RegulatoryLabel, fromSaved=F, casesForTraining=NULL,
+                                outputFolder="", runName="VAE", normalise="rows",
+                                missingMethod="mean", verbose=T, outputFileName="SiRCle_RCM.csv",
+                                logfile="logfileRCM.csv", envName=NULL, condaEnvName=NULL, envPath=NULL) {
+  setupEnv = F
+  ## ------------ Setup and installs ----------- ##
+  packages <- c("tidyverse", "reticulate", "dplyr")
+  install.packages(setdiff(packages, rownames(installed.packages())))
+
+  library(tidyverse)
+  library(dplyr)
+  library(reticulate)
+
+  ## ------------ Setup the environment ----------- ##
+  if (! is.null(condaEnvName)) {
+    use_condaenv(condaEnvName, required = TRUE)
+    setupEnv = T
+  }
+  if (! is.null(envName)) {
+    use_virtualenv(envName, required = TRUE)
+    setupEnv = T
+  }
+  if (! is.null(envPath)) {
+    use_python(envPath, required = TRUE)
+    setupEnv = T
+  }
+  if (! setupEnv) {
+    print("WARNING: NEXT TIME USE envNAME --> we are creating you a new virtual environment called sircle. THIS TAKES TIME, so next time pass envName=sircle to skip this step. ")
+    print("WARNING: YOUR SYSTEM NEED PYTHON > 3.6. If it doesn't nothing will work, please update to python 3.6 or consider installing conda!")
+    virtualenv_create(
+      envname = "sircle",
+      python = NULL,
+      packages = "scircm",
+      system_site_packages = getOption("reticulate.virtualenv.system_site_packages",
+                                       default = FALSE)
+    )
+    use_python(envPath, required = TRUE)
+    setupEnv = T
+  }
+  scircm <<- import("scircm")    # Make global
+
+  ## ------------ Run the RCM Stats ----------- ##
+  sv <- scircm$RCMStats(rcmFile,
+                        patientSampleFile,
+                        methFile,
+                        methSampleFile,
+                        rnaFile,
+                        rnaSampleFile,
+                        proteinFile,
+                        proteinSampleFile,
+                        outputFolder,
+                        conditionColumn,
+                        sampleLabelColumn,
+                        patientIdColumn,
+                        configVAEFile, RegulatoryLabel,
+                        runName, normalise, verbose, missingMethod)
+
+  if (fromSaved) {
+    ## ------------ Re-load saved VAEs ----------- ##
+    sv$load_saved_vaes()
+    sv$load_saved_encodings(paste0(sv$output_folder, 'encoded_df_', sv$run_name, '.csv'))
+    sv$load_saved_inputs(paste0(sv$output_folder, 'vae_input_df_', sv$run_name, '.csv'))
+    sv$load_saved_raws(paste0(sv$output_folder, 'raw_input_df_', sv$run_name, '.csv'))
+  } else {
+    sv$train_vae(casesForTraining) #ToDo: allow users to set their own config. cases=matching_cases, config=config)
+    sv$save()  # Save the information we have generated.
+  }
+
+  return(sv)
+}
+
+
+#' runSircleStats
+#'
+#' Runs stats on two groups of patients by integrating their data and computing stats on the latent dimensions.
+#'
+#' @param sv a pretrained instance of the stats model
+#' @param condLabel The condition label (e.g. column) that exists in your patient file and the sample files (e.g. gender)
+#' @param cond0 Condition 0 (i.e, female)
+#' @param cond1 e.g. your condition 1 value (e.g. male)
+#' @return df: a DF with the stats in it
+#' @export
+#'
+runSircleStats <- function(sv, condLabel, cond0, cond1) {
+  df <- sv$run_vae_stats(condLabel, cond0, cond1)
+  df <- as.data.frame(df)
+  return(df)
+}
+
 #' sircleRCM
 #'
 #' Uses scircm to compute the regulatory clustering model.
@@ -50,11 +173,12 @@
 #' @return rcm an instance of the rcm package
 #' @export
 #'
+
 sircleRCM <- function(rnaFile, methFile, proteinFile, geneId,
                       rnaValueCol, rnaPadjCol, methValueCol, methPadjCol, proteinValueCol, proteinPadjCol, proteinCols=NULL,
                       rnaPadjCutoff=0.05, rnaLogFCCutoff=0.5, proteinPadjCutoff=0.05, proteinValueCutoff=0.3,
                       methPadjCutoff=0.05, methDiffCutoff=10, backgroundMethod="P|(M&R)", fileSep=",",
-                      nonCodingGeneList=NULL, outputFileName="SiRCle_RCM.csv", 
+                      nonCodingGeneList=NULL, outputFileName="SiRCle_RCM.csv",
                       logfile="logfileRCM.csv", envName=NULL, condaEnvName=NULL, envPath=NULL) {
   setupEnv = F
   ## ------------ Setup and installs ----------- ##

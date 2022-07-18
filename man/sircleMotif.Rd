@@ -5,23 +5,25 @@
 \title{sircleMotif}
 \usage{
 sircleMotif(
-  geneId,
-  fimoFilename,
+  clusterGeneId,
+  doroFile,
   sircleRCMFilename,
   TFPadjCol,
   TFValueCol,
-  pDisplayCutoff = 0.05,
+  TargetPadjCol,
+  TargetValueCol,
+  RegulatoryLabel,
   TFInDataset = T,
-  fimoPcol = "p-value",
-  outputDir = "",
-  regLabels = "RegulatoryLabels",
-  outputFilename = "SiRCle-motif.csv"
+  doroLevel = c("A"),
+  clusters = c("MDS", "MDE", "TPDE", "TPDS"),
+  outputFilename = "SiRCle-motif.csv",
+  outputDir = ""
 )
 }
 \arguments{
-\item{geneId}{Column name with the gene identifier}
+\item{clusterGeneId}{Column name with the gene identifier}
 
-\item{fimoFilename}{Filename/path of the output from fimo (usually fimo.tsv)}
+\item{doroFile}{Filename/path of the file from Dorothea which has A,B,C,D relationships}
 
 \item{sircleRCMFilename}{Filename/path of the output from sircleRCM}
 
@@ -29,19 +31,25 @@ sircleMotif(
 
 \item{TFValueCol}{Column name of  rna value for the TF (could also use the proteomics logfc)}
 
-\item{pDisplayCutoff}{Cutoff for the clusters (only returns results less than this, usually 0.05)}
+\item{TargetPadjCol}{Column name of the padjusted value in the sircleRCMFilename file (i.e. your RNAseq, or your protein p column)}
 
-\item{TFInDataset}{Whether or not you require the TF to be expressed in the dataframe}
+\item{TargetValueCol}{Column name of  rna value for the TF (could also use the proteomics logfc)}
 
-\item{fimoPcol}{Column name of p or q value used to filter fimo results(q-value for adjusted or p-value for un-adj)}
+\item{RegulatoryLabel}{Column name of the regulatory labels}
 
-\item{regLabels}{Column name of the regulatory labels}
+\item{TFInDataset}{\emph{Optional: } Whether or not you require the TF to be expressed in the dataframe}
 
-\item{outputFilename}{Filename for the output file.}
+\item{doroLevel}{\emph{Optional: } level(s) of doro as a list \strong{Default=c("A")}}
+
+\item{clusters}{\emph{Optional: } clusters to investigate \strong{Default=c("MDS", "MDE", "TPDE", "TPDS")}}
+
+\item{outputFilename}{\emph{Optional: } Filename for the output file.}
+
+\item{outputDir}{\emph{Optional: } Full path for output directory.}
 }
 \value{
 scimo an instance of the scimo package
 }
 \description{
-Uses dorothea and viper to predict the activity and activity change of transcription factors.
+Uses dorothea to find TFs enriched in clusters
 }

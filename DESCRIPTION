@@ -1,16 +1,22 @@
 Package: sircle
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Type: Package
+Title: Signature Regulatory Clustering Model 
+Version: 0.1.0
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Ariane",
+           family = "Mora",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+           email = "ariane.mora@uq.net.au")
+    person(given = "Christina",
+           family = "Schmidt",
+           role = c("aut", "cre"),
+           email = "christina.schmidt@uni-koeln.de")    
+Description: SiRCle (Signature Regulatory Clustering), a novel method to integrate DNA methylation, RNA-seq and proteomics data. 
+    Applying SiRCle one can disentangle the layer (DNA methylation, transcription and/or translation) where dysregulation first occurs 
+    and find the primary biological processes altered. 
+License: GNU General Public License v3.0
 Encoding: UTF-8
 LazyData: true
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.0
+Suggests: knitr
+VignetteBuilder: knitr
+biocViews: Software, DNAMethylation, GeneExpression

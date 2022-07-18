@@ -6,7 +6,6 @@
 \usage{
 sircleTFVis(
   filename,
-  TFValueChangeCol,
   colorCol = "q-value",
   fillNAVal = NA,
   plotBar = T,
@@ -16,8 +15,6 @@ sircleTFVis(
 }
 \arguments{
 \item{filename}{Column name with the gene identifier}
-
-\item{TFValueChangeCol}{Column with the value that we will filter on (usually the dorothea column)}
 
 \item{colorCol}{\emph{Optional:} Column name to use for colouring \strong{Default: "q-value"}}
 

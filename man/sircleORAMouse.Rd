@@ -13,9 +13,6 @@ sircleORAMouse(filename, regLabels = "RegulatoryLabels", fileType = "pdf")
 
 \item{envPath}{\emph{Optional: } fileType Output file type for the figures one of: "svg", "pdf", "png" \strong{default: "pdf"}}
 }
-\value{
-
-}
 \description{
 Uses encrichGo to run ORA on each of the clusters as defined by the regulatory labels (on MOUSE)
 }

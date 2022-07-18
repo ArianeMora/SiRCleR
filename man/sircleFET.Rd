@@ -24,9 +24,6 @@ sircleFET(
 
 \item{geneId}{GeneId column name in your dataframe}
 }
-\value{
-
-}
 \description{
 Uses scircm to compute the regulatory clustering model.
 }

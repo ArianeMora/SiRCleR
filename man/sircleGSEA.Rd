@@ -31,9 +31,6 @@ sircleGSEA(
 
 \item{pathway_list_go}{A list of pathways for the GSEA (see example for details)}
 }
-\value{
-
-}
 \description{
 Uses scircm to compute the regulatory clustering model.
 }
