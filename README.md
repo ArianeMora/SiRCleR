@@ -53,7 +53,7 @@ See the examples folder for a proper tutorial with data included that you can ru
 ```
 from scircm import SciRCM
 # FORMAT must be csv :) 
-protFile = f'path to the output from protein differential abundence file'
+protFile = f'path to the output from protein differential abundance file'
 rnaFile = f'path to the output from differential expression analysis file'
 methFile = f'path to the output from methylation DCpG analysis file'
 geneId <- 'ensembl_gene_id'
@@ -78,10 +78,10 @@ sirclePlot(sircleFileName, regLabels="Regulation_Grouping_3")
 ```
 
 #### Making your CpGs map to a single gene version
-This is only in python at the moment. Please post an issue if you want to do this in R and we'll write a wrapper :)  (https://github.com/ArianeMora/scircm)
+This is only in python at the moment. Please post any issue if you want to do this in R and we'll write a wrapper :)  (https://github.com/ArianeMora/scircm)
 
 
-## Regulatory clustering model 
+## Signature Regulatory Clustering model 
 
 The general table of how we define regulatory clusters.
 
