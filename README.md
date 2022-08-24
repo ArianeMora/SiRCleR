@@ -117,4 +117,17 @@ The general table of how we define regulatory clusters.
 
 Please post questions and issues related to sci-rcm on the `Issues <https://github.com/ArianeMora/scircm/issues>`_  section of the GitHub repository.
 
+### Developers
 
+```
+bas_scircm <- BasiliskEnvironment(envname="bas_scircm",
+    pkgname="sircle",
+    packages=c("scircm==1.0.1")
+)
+
+res <- basiliskRun(env=bas_scircm, fun=function(args) {
+    out <- reticulate::import("bas_scircm")
+    # Do something with pandas
+    return(some_r_object)
+})
+```

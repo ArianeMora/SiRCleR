@@ -1,0 +1,25 @@
+,AliquotID,CondName,CondId,SafeCases,FullLabel,gender,TumorStage,AgeGrouped,BMIGrouped,RaceGrouped,MTOR_mutation,VHL_mutation,SETD2_mutation,PBRM1_mutation,KDM5C_mutation,TTN_mutation,BAP1_mutation,CIMPStatus,GenomeInstability,VHL+TTN,VHL-TTN,VHL+PBRM1,VHL-PBRM1,PBRM1-VHL,VHL,TTN-VHL,TTN+PBRM1-VHL
+C3L-00011,CPT0001340003,Tumor,1,C3L.00011,Protein_Tumor_C3L.00011_CPT0001340003,Female,Stage IV,old,between,White,0,1,0,0,1,1,0,1,1,1,0,0,1,0,0,0,0
+C3L-00011,CPT0001350001,Normal,0,C3L.00011,Protein_Normal_C3L.00011_CPT0001350001,Female,Stage IV,old,between,White,0,1,0,0,1,1,0,1,1,1,0,0,1,0,0,0,0
+C3L-00096,CPT0001180009,Tumor,1,C3L.00096,Protein_Tumor_C3L.00096_CPT0001180009,Male,Stage IV,middle,between,White,0,1,0,0,0,0,0,1,0,0,1,0,1,0,1,0,0
+C3L-00096,CPT0001190001,Normal,0,C3L.00096,Protein_Normal_C3L.00096_CPT0001190001,Male,Stage IV,middle,between,White,0,1,0,0,0,0,0,1,0,0,1,0,1,0,1,0,0
+C3L-01281,CPT0079510001,Normal,0,C3L.01281,Protein_Normal_C3L.01281_CPT0079510001,Male,Stage IV,old,between,White,0,1,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0
+C3L-01281,CPT0079480003,Tumor,1,C3L.01281,Protein_Tumor_C3L.01281_CPT0079480003,Male,Stage IV,old,between,White,0,1,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0
+C3L-01287,CPT0079430001,Normal,0,C3L.01287,Protein_Normal_C3L.01287_CPT0079430001,Male,Stage IV,old,between,White,0,1,0,0,0,0,1,1,0,0,1,0,1,0,1,0,0
+C3L-01287,CPT0079410003,Tumor,1,C3L.01287,Protein_Tumor_C3L.01287_CPT0079410003,Male,Stage IV,old,between,White,0,1,0,0,0,0,1,1,0,0,1,0,1,0,1,0,0
+C3N-00149,CPT0084560003,Tumor,1,C3N.00149,Protein_Tumor_C3N.00149_CPT0084560003,Female,Stage IV,old,between,White,0,1,0,0,0,0,0,1,1,0,1,0,1,0,1,0,0
+C3N-00149,CPT0084590001,Normal,0,C3N.00149,Protein_Normal_C3N.00149_CPT0084590001,Female,Stage IV,old,between,White,0,1,0,0,0,0,0,1,1,0,1,0,1,0,1,0,0
+C3N-00150,CPT0066480003,Tumor,1,C3N.00150,Protein_Tumor_C3N.00150_CPT0066480003,Female,Stage IV,middle,normal,White,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+C3N-00150,CPT0066520001,Normal,0,C3N.00150,Protein_Normal_C3N.00150_CPT0066520001,Female,Stage IV,middle,normal,White,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+C3N-00194,CPT0014130001,Normal,0,C3N.00194,Protein_Normal_C3N.00194_CPT0014130001,Female,Stage IV,middle,between,White,0,1,0,0,0,1,0,1,0,1,0,0,1,0,0,0,0
+C3N-00194,CPT0014160003,Tumor,1,C3N.00194,Protein_Tumor_C3N.00194_CPT0014160003,Female,Stage IV,middle,between,White,0,1,0,0,0,1,0,1,0,1,0,0,1,0,0,0,0
+C3N-00390,CPT0017450001,Normal,0,C3N.00390,Protein_Normal_C3N.00390_CPT0017450001,Male,Stage IV,old,between,Slavonic,0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,0,0
+C3N-00390,CPT0017410003,Tumor,1,C3N.00390,Protein_Tumor_C3N.00390_CPT0017410003,Male,Stage IV,old,between,Slavonic,0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,0,0
+C3N-00491,CPT0012640003,Normal,0,C3N.00491,Protein_Normal_C3N.00491_CPT0012640003,Male,Stage IV,middle,between,White,0,1,1,1,0,0,0,1,0,0,1,1,0,0,0,0,0
+C3N-00491,CPT0012670003,Tumor,1,C3N.00491,Protein_Tumor_C3N.00491_CPT0012670003,Male,Stage IV,middle,between,White,0,1,1,1,0,0,0,1,0,0,1,1,0,0,0,0,0
+C3N-00577,CPT0069190001,Normal,0,C3N.00577,Protein_Normal_C3N.00577_CPT0069190001,Male,Stage IV,old,normal,Asian,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
+C3N-00577,CPT0069160003,Tumor,1,C3N.00577,Protein_Tumor_C3N.00577_CPT0069160003,Male,Stage IV,old,normal,Asian,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
+C3N-01200,CPT0075170001,Normal,0,C3N.01200,Protein_Normal_C3N.01200_CPT0075170001,Female,Stage IV,middle,between,Slavonic,0,1,0,0,0,1,1,0,0,1,0,0,1,0,0,0,0
+C3N-01200,CPT0075130003,Tumor,1,C3N.01200,Protein_Tumor_C3N.01200_CPT0075130003,Female,Stage IV,middle,between,Slavonic,0,1,0,0,0,1,1,0,0,1,0,0,1,0,0,0,0
+C3N-01220,CPT0076350001,Normal,0,C3N.01220,Protein_Normal_C3N.01220_CPT0076350001,Male,Stage IV,middle,normal,Slavonic,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0
+C3N-01220,CPT0076330003,Tumor,1,C3N.01220,Protein_Tumor_C3N.01220_CPT0076330003,Male,Stage IV,middle,normal,Slavonic,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0
