@@ -14,22 +14,22 @@ Note if your computer has an old version of python (i.e. < 3.8) the machine lear
 https://rstudio.github.io/reticulate/articles/versions.html
 ```{r}
 # install.packages("reticulate)
-library("reticulate")
-virtualenv_create(
-      envname = "scircm",
-      python = NULL,
-      packages = "scircm",
-      system_site_packages = getOption("reticulate.virtualenv.system_site_packages",
-                                       default = FALSE)
-    )
+#library("reticulate")
+#virtualenv_create(
+#      envname = "scircm",
+#      python = NULL,
+#      packages = "scircm",
+#      system_site_packages = getOption("reticulate.virtualenv.system_site_packages",
+#                                       default = FALSE)
+#    )
 
 ```
 ## Install the R package
 
 ```{r}
 #install.packages("devtools")
-library(devtools)
-install_github("ArianeMora/SiRCleR")
+#library(devtools)
+#install_github("ArianeMora/SiRCleR")
 library(sircle)
 ```
 
@@ -38,6 +38,7 @@ library(sircle)
 Note we assume your methylation CpGs map to a single gene, if they don't  you'll need to filter them.
 
 ```{r}
+
 library(basilisk)
 data_dir <- '/Users/ariane/Documents/code/scircm/examples/data/data_example/'
 
@@ -114,7 +115,7 @@ rcm <- sircleRCM(rnaFile, methFile, protFile, geneId,  "logFC_rna", "padj_rna", 
 sirclePlot(sircleFileName, regLabels="Regulation_Grouping_2") 
 
 # Run ORA on the groups
-sircleORAHuman(sircleFileName, "entrezgene_id", "Regulation_Grouping_2")
+#sircleORAHuman(sircleFileName, "entrezgene_id", "Regulation_Grouping_2")
 
 
 ```
@@ -222,20 +223,13 @@ res_sv <- basiliskRun(env=bas_scircm, fun=function(args) {
 df <- res_sv$run_vae_stats("gender", "Female", "Male")
 df <- as.data.frame(df)
   
-sv <- makeSircleStatModel(rcmFile, patientSampleFile, methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile, sampleLabelColumn, conditionColumn, patientIdColumn, NULL, RegulatoryLabel, fromSaved=F, casesForTraining=casesForTraining, outputFolder=data_dir, envName="scircm", runName="Rversion")
-
 # Loading a saved version (just changed the fromSaved flag)
-sv <- makeSircleStatModel(rcmFile, patientSampleFile, methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile, sampleLabelColumn, conditionColumn, patientIdColumn, NULL, RegulatoryLabel, fromSaved=T, casesForTraining=casesForTraining, outputFolder=data_dir, envName="scircm", runName="Rversion")
-
-# Now you can run stats
-statsDf <- runSircleStats(sv, "gender", "Female", "Male")
-statsDf[statsDf['Integrated pval (Male-Female)'] < 0.05] # E.g we can look at things now
-
+#sv <- makeSircleStatModel(rcmFile, patientSampleFile, methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile, sampleLabelColumn, conditionColumn, patientIdColumn, NULL, RegulatoryLabel, fromSaved=T, casesForTraining=casesForTraining, outputFolder=data_dir, envName="scircm", runName="Rversion")
 ```
 
 ### TF analysis using Dorothea
 
-```{r}
+
 # TF analysis
 doroFile <- paste0(data_dir, 'dorothea_hs_ABCD.csv')
 TFPadjCol <- 'padj_rna'
@@ -249,65 +243,5 @@ m_df <- sircleMotif(clusterGeneId, doroFile, sircleRCMFilename, TFPadjCol, TFVal
                      doroLevel=c("A"), clusters=c("TMDE", "TMDS", "MDS", "MDE", "TPDE", "TPDS"), TFInDataset=F, outputDir=data_dir, plotOn=T)
 
 
-class TestRCMVAE(TestClass):
-
-    def test_new_stats(self):
-        base_dir = '../examples/data/'
-        output_dir = f'{base_dir}'
-        data_dir = f'{base_dir}'
-        rcm_file = f'{data_dir}RCM.csv'
-        # Now we want to check stats where we use the data that accomnaied those inputs
-        label = 'FINAL'
-
-        meth_file = f'{data_dir}CPTAC_cpg.csv'
-        rna_file = f'{data_dir}CPTAC_rna.csv'
-        protein_file = f'{data_dir}CPTAC_protein.csv'
-
-        meth_sample_file = f'{data_dir}cpg_sample_data_Stage IV_sircle.csv'
-        rna_sample_file = f'{data_dir}rna_sample_data_Stage IV_sircle.csv'
-        protein_sample_file = f'{data_dir}prot_sample_data_Stage IV_sircle.csv'
-        sv = RCMStats(rcm_file, f'{data_dir}clinical_CPTAC_TCGA.csv',
-                    meth_file, meth_sample_file, rna_file, rna_sample_file,
-                    protein_file, protein_sample_file,
-                      output_folder=output_dir, column_id='FullLabel',
-                      condition_column='CondId',
-                       patient_id_column='SafeCases',
-                       run_name=label,
-                        normalise='rows', missing_method='clinical', iid=True)
-        epochs = 2  # To make it quicker to train
-        batch_size = 16
-        num_nodes = 5
-        mmd_weight = 0.25
-        loss = {'loss_type': 'mse', 'distance_metric': 'mmd', 'mmd_weight': mmd_weight}
-        config = {"loss": loss,
-                  "encoding": {"layers": [{"num_nodes": num_nodes, "activation_fn": "relu"}]},
-                  "decoding": {"layers": [{"num_nodes": num_nodes, "activation_fn": "relu"}]},
-                  "latent": {"num_nodes": 1},
-                  "optimiser": {"params": {'learning_rate': 0.01}, "name": "adam"},
-                  "epochs": epochs,
-                  "batch_size": batch_size,
-                  "scale_data": False
-                  }
-        training_cases = ['C3L.00004', 'C3L.00010', 'C3L.00011', 'C3L.00026', 'C3L.00079', 'C3L.00088', 'C3L.00096',
-                          'C3L.00097', 'C3L.00103', 'C3L.00360', 'C3L.00369', 'C3L.00416', 'C3L.00418', 'C3L.00447',
-                          'C3L.00581', 'C3L.00606', 'C3L.00814', 'C3L.00902', 'C3L.00907', 'C3L.00908', 'C3L.00910',
-                          'C3L.00917', 'C3L.01286', 'C3L.01287', 'C3L.01313', 'C3L.01603', 'C3L.01607', 'C3L.01836',
-                          'C3N.00148', 'C3N.00149', 'C3N.00150', 'C3N.00177', 'C3N.00194', 'C3N.00244', 'C3N.00310',
-                          'C3N.00314', 'C3N.00390', 'C3N.00494', 'C3N.00495', 'C3N.00573', 'C3N.00577', 'C3N.00646',
-                          'C3N.00733', 'C3N.00831', 'C3N.00834', 'C3N.00852', 'C3N.01176', 'C3N.01178', 'C3N.01179',
-                          'C3N.01200', 'C3N.01214', 'C3N.01220', 'C3N.01261', 'C3N.01361', 'C3N.01522', 'C3N.01646',
-                          'C3N.01649', 'C3N.01651', 'C3N.01808']
-        sv.train_vae(cases=training_cases, config=config)
-        sv.save()
-        #sv.load_saved_vaes()
-        #sv.load_saved_inputs(f'{output_dir}input_df_{label}.csv')
-        #sv.load_saved_encodings(f'{output_dir}encoded_df_{label}.csv')
-        sv.run_vae_stats(cond_label='gender', cond0='Male', cond1='Female')
-        #sv.run_vae_stats(cond_label='AgeGrouped', cond0='young', cond1='old')
-        #sv.run_vae_stats(cond_label='TumorStage', cond0='Stage I', cond1='Stage IV')
-        dec = sv.get_decoding('MDS')
-        print(dec)
-
-```
 
 

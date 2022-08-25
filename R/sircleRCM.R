@@ -60,11 +60,11 @@ makeSircleStatModel <- function(rcmFile, patientSampleFile,
   ## ------------ Setup and installs ----------- ##
   packages <- c("tidyverse", "reticulate", "dplyr")
   install.packages(setdiff(packages, rownames(installed.packages())))
-  
+
   library(tidyverse)
   library(dplyr)
   library(reticulate)
-  
+
   ## ------------ Setup the environment ----------- ##
   if (! is.null(condaEnvName)) {
     use_condaenv(condaEnvName, required = TRUE)
@@ -92,7 +92,7 @@ makeSircleStatModel <- function(rcmFile, patientSampleFile,
     setupEnv = T
   }
   scircm <<- import("scircm")    # Make global
-  
+
   ## ------------ Run the RCM Stats ----------- ##
   sv <- scircm$RCMStats(rcmFile,
                         patientSampleFile,
@@ -108,7 +108,7 @@ makeSircleStatModel <- function(rcmFile, patientSampleFile,
                         patientIdColumn,
                         configVAEFile, RegulatoryLabel,
                         runName, normalise, verbose, missingMethod)
-  
+
   if (fromSaved) {
     ## ------------ Re-load saved VAEs ----------- ##
     sv$load_saved_vaes()
@@ -119,7 +119,7 @@ makeSircleStatModel <- function(rcmFile, patientSampleFile,
     sv$train_vae(casesForTraining) #ToDo: allow users to set their own config. cases=matching_cases, config=config)
     sv$save()  # Save the information we have generated.
   }
-  
+
   return(sv)
 }
 
@@ -184,11 +184,11 @@ sircleRCM <- function(rnaFile, methFile, proteinFile, geneId,
   ## ------------ Setup and installs ----------- ##
   packages <- c("tidyverse", "reticulate", "dplyr")
   install.packages(setdiff(packages, rownames(installed.packages())))
-  
+
   library(tidyverse)
   library(dplyr)
   library(reticulate)
-  
+
   ## ------------ Setup the environment ----------- ##
   if (! is.null(condaEnvName)) {
     use_condaenv(condaEnvName, required = TRUE)
@@ -218,7 +218,7 @@ sircleRCM <- function(rnaFile, methFile, proteinFile, geneId,
   scimotf <<- import("scimotf")  # Make global
   scircm <<- import("scircm")    # Make global
   scivae <<- import("scivae")    # Make global
-  
+
   ## ------------ Run the RCM ----------- ##
   rcm <- scircm$SciRCM(methFile, rnaFile, proteinFile,
                        rnaValueCol, rnaPadjCol, methValueCol, methPadjCol,
@@ -235,8 +235,8 @@ sircleRCM <- function(rnaFile, methFile, proteinFile, geneId,
   }
   df <- rcm$get_df()
   # This changes it so we can use it in R again
-  write.csv(df, outputFileName, row.names=FALSE)
-  
+  rcm$save_df(outputFileName)
+
   return(rcm)
 }
 
@@ -254,11 +254,11 @@ sirclePlot <- function(filename, regLabels="RegulatoryLabels", fileType="pdf") {
   ## ------------ Setup and installs ----------- ##
   packages <- c("packcircles", "tidyr", "ggplot2")
   install.packages(setdiff(packages, rownames(installed.packages())))
-  
+
   library(packcircles)
   library(tidyr)
   library(ggplot2)
-  
+
   ## ------------ Run ----------- ##
   scircm_Output <- read.csv(filename)
   #Prepare the Dataframe:
@@ -302,7 +302,7 @@ sirclePlot <- function(filename, regLabels="RegulatoryLabels", fileType="pdf") {
 sircleVAE <- function(rcm, df, geneId, configVAEFile, plotVAE=T, plottingCols=NULL, figType="pdf") {
   # Now actually run the VAE
   rcm$compute_vae(df, geneId, configVAEFile)
-  
+
   if (plotVAE) {
     rcmMarkers <- list(rcm$get_genes_in_reg_grp("MDS"),
                        rcm$get_genes_in_reg_grp("TPDE_TMDS"),
@@ -326,7 +326,7 @@ sircleVAE <- function(rcm, df, geneId, configVAEFile, plotVAE=T, plottingCols=NU
     vaeVis$plot_feature_correlation(df, geneId, columns=plottingCols, fig_type=figType)
     vaeVis$plot_input_distribution(df, geneId, columns=plottingCols, fig_type=figType)
   }
-  
+
 }
 
 #' sircleGSEA
@@ -348,17 +348,17 @@ sircleGSEA <- function(rcm, df, geneId, numNodes, userPathways, fgseaPCutoff=1.0
   packages <- c("fgsea")
   install.packages(setdiff(packages, rownames(installed.packages())))
   library(fgsea)
-  
+
   for (i in groupLabels) {
     for (n in 0:numNodes) {
       rankRegGrp <- rcm$rank_rcm_by_vae(df, i, as.integer(n), geneId)
       vaeRankValues <- rankRegGrp[[paste("node", as.integer(n), sep="_")]]
-      
+
       names(vaeRankValues) <- as.character(rankRegGrp[[geneId]])
       #run the GSEA analysis
       fgseaVAE <- fgsea(pathways = userPathways, vaeRankValues, nperm=10000)
       fgseaVAE <- fgseaVAE[fgseaVAE$padj <= fgseaPCutoff, ]
-      
+
       if (nrow(fgseaVAE) > 1) {
         write_csv(fgseaVAE[,c(-8)], paste("SiRCle-vaeRank-nperm10000-",i, "-Node", n + 1, "_", fileLabel,".csv", sep=""))
       }
@@ -386,17 +386,17 @@ sircleFET <- function(rcm, allGenes, genesOfInterest, outputFilename="SiRCle-FET
   genesWithOUTInBG <- list()
   genesWithOUTInClutser <- list()
   genesIn <- list()
-  
+
   i <- 1
   for(g in groupLabels) {
     grpGenes <- rcm$get_genes_in_reg_grp(g, geneId)
     hasInCluster <- genesOfInterest[genesOfInterest %in% grpGenes]
-    
+
     numGenes_WITH_InCluster <- length(hasInCluster)
     numGenes_WITHOUT_InCluster <- length(grpGenes) - numGenes_WITH_InCluster
     numGenes_WITH_InBG <- length(genesOfInterest) - numGenes_WITH_InCluster
     numGenes_WITHOUT_InBG <- length(allGenes) - numGenes_WITH_InBG
-    
+
     dat <- matrix(c(numGenes_WITH_InCluster, numGenes_WITHOUT_InCluster, numGenes_WITH_InBG, numGenes_WITHOUT_InBG), ncol=2)
     names <- list(c("in cluster", "not in cluster"), c("has value", "does not have value"))
     Convictions <- matrix(dat, nrow = 2, dimnames = names)
@@ -411,11 +411,11 @@ sircleFET <- function(rcm, allGenes, genesOfInterest, outputFilename="SiRCle-FET
     oddsRatios[i] <- test$estimate
     pValues[i] <- test$p.value
     i <- i + 1
-    
+
   }
-  
+
   pAdjValues <- p.adjust(pValues, method="BH")
-  
+
   FET_DF <- data.frame(groupLabels)
   FET_DF$oddsRatios <- oddsRatios
   FET_DF$padj <- pAdjValues
