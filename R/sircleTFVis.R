@@ -9,7 +9,7 @@
 ## Date Created: 2021-01-18
 ##
 ## Copyright (c) Christina Schmidt and Ariane Mora
-## Email:
+## Email: ariane.n.mora@gmail.com
 ##
 ## ---------------------------
 ##
