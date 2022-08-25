@@ -64,33 +64,6 @@ makeSircleStatModel <- function(rcmFile, patientSampleFile,
   library(tidyverse)
   library(dplyr)
   library(reticulate)
-
-  ## ------------ Setup the environment ----------- ##
-  if (! is.null(condaEnvName)) {
-    use_condaenv(condaEnvName, required = TRUE)
-    setupEnv = T
-  }
-  if (! is.null(envName)) {
-    use_virtualenv(envName, required = TRUE)
-    setupEnv = T
-  }
-  if (! is.null(envPath)) {
-    use_python(envPath, required = TRUE)
-    setupEnv = T
-  }
-  if (! setupEnv) {
-    print("WARNING: NEXT TIME USE envNAME --> we are creating you a new virtual environment called sircle. THIS TAKES TIME, so next time pass envName=sircle to skip this step. ")
-    print("WARNING: YOUR SYSTEM NEED PYTHON > 3.6. If it doesn't nothing will work, please update to python 3.6 or consider installing conda!")
-    virtualenv_create(
-      envname = "sircle",
-      python = NULL,
-      packages = "scircm",
-      system_site_packages = getOption("reticulate.virtualenv.system_site_packages",
-                                       default = FALSE)
-    )
-    use_python(envPath, required = TRUE)
-    setupEnv = T
-  }
   scircm <<- import("scircm")    # Make global
 
   ## ------------ Run the RCM Stats ----------- ##
@@ -173,7 +146,6 @@ runSircleStats <- function(sv, condLabel, cond0, cond1) {
 #' @return rcm an instance of the rcm package
 #' @export
 #'
-
 sircleRCM <- function(rnaFile, methFile, proteinFile, geneId,
                       rnaValueCol, rnaPadjCol, methValueCol, methPadjCol, proteinValueCol, proteinPadjCol, proteinCols=NULL,
                       rnaPadjCutoff=0.05, rnaLogFCCutoff=0.5, proteinPadjCutoff=0.05, proteinValueCutoff=0.3,
@@ -189,32 +161,6 @@ sircleRCM <- function(rnaFile, methFile, proteinFile, geneId,
   library(dplyr)
   library(reticulate)
 
-  ## ------------ Setup the environment ----------- ##
-  if (! is.null(condaEnvName)) {
-    use_condaenv(condaEnvName, required = TRUE)
-    setupEnv = T
-  }
-  if (! is.null(envName)) {
-    use_virtualenv(envName, required = TRUE)
-    setupEnv = T
-  }
-  if (! is.null(envPath)) {
-    use_python(envPath, required = TRUE)
-    setupEnv = T
-  }
-  if (! setupEnv) {
-    print("WARNING: NEXT TIME USE envNAME --> we are creating you a new virtual environment called sircle. THIS TAKES TIME, so next time pass envName=sircle to skip this step. ")
-    print("WARNING: YOUR SYSTEM NEED PYTHON > 3.6. If it doesn't nothing will work, please update to python 3.6 or consider installing conda!")
-    virtualenv_create(
-      envname = "sircle",
-      python = NULL,
-      packages = "scircm",
-      system_site_packages = getOption("reticulate.virtualenv.system_site_packages",
-                                       default = FALSE)
-    )
-    use_python(envPath, required = TRUE)
-    setupEnv = T
-  }
   scimotf <<- import("scimotf")  # Make global
   scircm <<- import("scircm")    # Make global
   scivae <<- import("scivae")    # Make global
@@ -228,17 +174,14 @@ sircleRCM <- function(rnaFile, methFile, proteinFile, geneId,
                        non_coding_genes=nonCodingGeneList, bg_type=backgroundMethod, logfile=logfile
   )
   # Check if the user wants to impute the protein columns
-  if (!is.null(proteinCols)) {
-    grp_values <- rcm$run(fill_protein=T, protein_cols=unlist(proteinCols))
-  } else {
-    rcm$run()
-  }
+  rcm$run()
   df <- rcm$get_df()
   # This changes it so we can use it in R again
   rcm$save_df(outputFileName)
 
   return(rcm)
 }
+
 
 #' sirclePlot
 #'

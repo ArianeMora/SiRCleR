@@ -35,12 +35,12 @@
 
 sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emptyRegLabel="", fileType="pdf", minGSSize=10, qvalueCutoff=0.2) {
   ## ------------ Setup and installs ----------- ##
-  packages <- c("org.Hs.eg.db", "clusterProfiler", "svglite")
+  packages <- c("org.Hs.eg.db", "clusterProfiler", "svglite", "enrichplot")
   install.packages(setdiff(packages, rownames(installed.packages())))
   library(org.Hs.eg.db)
   library(clusterProfiler)
   library(svglite)
-
+  library(enrichplot)
   ## ------------ Run ----------- ##
   # open the data
   df <- read.csv(filename)
@@ -94,7 +94,8 @@ sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emp
 #' @export
 sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf") {
   ## ------------ Setup and installs ----------- ##
-  packages <- c("org.Mm.eg.db", "clusterProfiler")
+  packages <- c("org.Mm.eg.db", "clusterProfiler", "svglite", "enrichplot")
+
   install.packages(setdiff(packages, rownames(installed.packages())))
   library(clusterProfiler)
   library(org.Mm.eg.db)
