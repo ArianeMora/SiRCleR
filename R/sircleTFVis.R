@@ -253,7 +253,6 @@ sircleTFEman <- function(TfDf, colorLabel, fillNAVal=NA, titleStr="", continuous
               legend.key.width = unit(0.5,"cm"))
 
       ggsave(file=paste("TF-plot_", titleStr,".pdf", sep="" ), plot=tfplt)
-      tfplt
     }
   }
 }
