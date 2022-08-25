@@ -223,7 +223,6 @@ sircleTFEman <- function(TfDf, colorLabel, fillNAVal=NA, titleStr="", continuous
               legend.key.width = unit(0.5,"cm"))
 
       ggsave(file=paste("TF-plot_", titleStr,".pdf", sep=""), plot=tfplt)
-      tfplt
     } else {
       tfplt <- ggraph(TF_graph,
                       layout ="stress")+ #layout are the node-positions and (possible) attributes
