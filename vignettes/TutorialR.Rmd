@@ -27,6 +27,7 @@ library(sircle)
 Note we assume your methylation CpGs map to a single gene, if they don't  you'll need to filter them.
 
 ```{r}
+#install.packages('BiocManager')
 #BiocManager::install('basilisk')
 library(basilisk)
 # Set this to be the path to the example data we downloaded
@@ -60,11 +61,6 @@ res <- basiliskRun(env=bas_scircm, fun=function(args) {
     # Do something with pandas
     return(rcm)
 })
-
-# Run the sircle RCM this may take some time
-rcm <- sircleRCM(rnaFile, methFile, protFile, geneId,  "logFC_rna", "padj_rna", "CpG_Beta_diff", "padj_meth", "logFC_protein", "padj_protein",
-                 outputFileName = sircleFileName, 
-                 envName="scircm")
 
 # Plot the sircle function
 sirclePlot(sircleFileName, regLabels="Regulation_Grouping_2") 
@@ -104,10 +100,6 @@ methFile <- paste0(data_dir, 'CPTAC_cpg_S4.csv')
 rnaFile <- paste0(data_dir, 'CPTAC_RNA_S4.csv')
 
 # Again need to have the ensembl gene ID as the first column
-#write.csv(rcm_df[, c(geneId, proteinSamples$FullLabel)],  paste0(data_dir, 'CPTAC_protein_S4.csv'), row.names=FALSE)
-#write.csv(rcm_df[, c(geneId, methSamples$FullLabel)], paste0(data_dir, 'CPTAC_cpg_S4.csv'), row.names=FALSE)
-#write.csv(rcm_df[, c(geneId, rnaSamples$FullLabel)], paste0(data_dir, 'CPTAC_RNA_S4.csv'), row.names=FALSE)
-
 sampleLabelColumn <- "FullLabel"
 conditionColumn <- "CondId"
 patientIdColumn <- "SafeCases"
