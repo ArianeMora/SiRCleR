@@ -14,22 +14,22 @@ Note if your computer has an old version of python (i.e. < 3.8) the machine lear
 https://rstudio.github.io/reticulate/articles/versions.html
 ```{r}
 # install.packages("reticulate)
-library("reticulate")
-virtualenv_create(
-      envname = "scircm",
-      python = NULL,
-      packages = "scircm",
-      system_site_packages = getOption("reticulate.virtualenv.system_site_packages",
-                                       default = FALSE)
-    )
+#library("reticulate")
+#virtualenv_create(
+#      envname = "scircm",
+#      python = NULL,
+#      packages = "scircm",
+#      system_site_packages = getOption("reticulate.virtualenv.system_site_packages",
+#                                       default = FALSE)
+#    )
 
 ```
 ## Install the R package
 
 ```{r}
 #install.packages("devtools")
-library(devtools)
-install_github("ArianeMora/SiRCleR")
+#library(devtools)
+#install_github("ArianeMora/SiRCleR")
 library(sircle)
 ```
 
@@ -38,7 +38,9 @@ library(sircle)
 Note we assume your methylation CpGs map to a single gene, if they don't  you'll need to filter them.
 
 ```{r}
-data_dir <- 'data/'
+
+library(basilisk)
+data_dir <- '/Users/ariane/Documents/code/scircm/examples/data/data_example/'
 
 protFile <- paste0(data_dir, 'prot_DE_Stage IV_sircle.csv')
 rnaFile <- paste0(data_dir, 'rna_DE_Stage IV_sircle_renamed-cols.csv')
@@ -46,6 +48,56 @@ methFile <- paste0(data_dir, 'filtered_cpg_DE_Stage IV_sircle.csv')
 geneId <- 'ensembl_gene_id'
 
 sircleFileName <- "SircleR-RCM.csv"
+bas_scircm <- BasiliskEnvironment(envname="bas_scircm",
+                                   pkgname="sircle",
+                                   packages=c("numpy==1.20"),
+                                  pip=c("scircm==1.0.1")
+)
+
+sircleRCM <- function(rnaFile, methFile, proteinFile, geneId,
+                      rnaValueCol, rnaPadjCol, methValueCol, methPadjCol, proteinValueCol, proteinPadjCol, proteinCols=NULL,
+                      rnaPadjCutoff=0.05, rnaLogFCCutoff=0.5, proteinPadjCutoff=0.05, proteinValueCutoff=0.3,
+                      methPadjCutoff=0.05, methDiffCutoff=10, backgroundMethod="P|(M&R)", fileSep=",",
+                      nonCodingGeneList=NULL, outputFileName="SiRCle_RCM.csv", 
+                      logfile="logfileRCM.csv", envName=NULL, condaEnvName=NULL, envPath=NULL) {
+  setupEnv = F
+  ## ------------ Setup and installs ----------- ##
+  packages <- c("tidyverse", "reticulate", "dplyr")
+  install.packages(setdiff(packages, rownames(installed.packages())))
+  
+  library(tidyverse)
+  library(dplyr)
+  library(reticulate)
+  
+  scimotf <<- import("scimotf")  # Make global
+  scircm <<- import("scircm")    # Make global
+  scivae <<- import("scivae")    # Make global
+  
+  ## ------------ Run the RCM ----------- ##
+  rcm <- scircm$SciRCM(methFile, rnaFile, proteinFile,
+                       rnaValueCol, rnaPadjCol, methValueCol, methPadjCol,
+                       proteinValueCol, proteinPadjCol, geneId, sep=fileSep,
+                       rna_padj_cutoff=rnaPadjCutoff, prot_padj_cutoff=proteinPadjCutoff, meth_padj_cutoff=methPadjCutoff,
+                       rna_logfc_cutoff=rnaLogFCCutoff, prot_logfc_cutoff=proteinValueCutoff, meth_diff_cutoff=methDiffCutoff,
+                       non_coding_genes=nonCodingGeneList, bg_type=backgroundMethod, logfile=logfile
+  )
+  # Check if the user wants to impute the protein columns
+  rcm$run()
+  df <- rcm$get_df()
+  # This changes it so we can use it in R again
+  rcm$save_df(outputFileName)
+  
+  return(rcm)
+}
+
+res <- basiliskRun(env=bas_scircm, fun=function(args) {
+    rcm <- sircleRCM(rnaFile, methFile, protFile, geneId,  "logFC_rna", "padj_rna", "CpG_Beta_diff", "padj_meth", "logFC_protein", "padj_protein",
+                 outputFileName = sircleFileName, 
+                 envName="scircm")
+    # Do something with pandas
+    return(rcm)
+})
+
 
 #logFC_rna = column name in your RNA file that has your RNA logFC (same for the protein and CpG)
 #padj_rna = column name in your RNA file that has your padj value (same for protein and CpG)
@@ -63,7 +115,7 @@ rcm <- sircleRCM(rnaFile, methFile, protFile, geneId,  "logFC_rna", "padj_rna", 
 sirclePlot(sircleFileName, regLabels="Regulation_Grouping_2") 
 
 # Run ORA on the groups
-sircleORAHuman(sircleFileName, "entrezgene_id", "Regulation_Grouping_2")
+#sircleORAHuman(sircleFileName, "entrezgene_id", "Regulation_Grouping_2")
 
 
 ```
@@ -71,12 +123,64 @@ sircleORAHuman(sircleFileName, "entrezgene_id", "Regulation_Grouping_2")
 
 Here we train (or load from saved) a VAE and then perform a comparison on two groups of patients.
 
+
+```{r}
+
+makeSircleStatModel <- function(rcmFile, patientSampleFile, 
+                                methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile,
+                                sampleLabelColumn, conditionColumn, patientIdColumn, configVAEFile, RegulatoryLabel, fromSaved=F, casesForTraining=NULL,
+                                outputFolder="", runName="VAE", normalise="rows",
+                                missingMethod="mean", verbose=T, outputFileName="SiRCle_RCM.csv", 
+                                logfile="logfileRCM.csv", envName=NULL, condaEnvName=NULL, envPath=NULL) {
+  setupEnv = F
+  ## ------------ Setup and installs ----------- ##
+  packages <- c("tidyverse", "reticulate", "dplyr")
+  install.packages(setdiff(packages, rownames(installed.packages())))
+  
+  library(tidyverse)
+  library(dplyr)
+  library(reticulate)
+  scircm <<- import("scircm")    # Make global
+  
+  ## ------------ Run the RCM Stats ----------- ##
+  sv <- scircm$RCMStats(rcmFile,
+                        patientSampleFile, 
+                        methFile, 
+                        methSampleFile,
+                        rnaFile, 
+                        rnaSampleFile, 
+                        proteinFile, 
+                        proteinSampleFile,
+                        outputFolder,
+                        conditionColumn, 
+                        sampleLabelColumn,
+                        patientIdColumn, 
+                        configVAEFile, RegulatoryLabel,
+                        runName, normalise, verbose, missingMethod)
+  
+  if (fromSaved) {
+    ## ------------ Re-load saved VAEs ----------- ##
+    sv$load_saved_vaes()
+    sv$load_saved_encodings(paste0(sv$output_folder, 'encoded_df_', sv$run_name, '.csv'))
+    sv$load_saved_inputs(paste0(sv$output_folder, 'vae_input_df_', sv$run_name, '.csv'))
+    sv$load_saved_raws(paste0(sv$output_folder, 'raw_input_df_', sv$run_name, '.csv'))
+  } else {
+    sv$train_vae(casesForTraining) #ToDo: allow users to set their own config. cases=matching_cases, config=config)
+    sv$save()  # Save the information we have generated.
+  }
+  
+  return(sv)
+}
+
+
+```
+
 ```{r}
 # VAE on two groups
 
-rcmFile <- sircleFileName
+rcmFile <- paste0(data_dir, 'RCM.csv')
 
-rcm_df <- read.csv(sircleFileName)
+rcm_df <- read.csv(rcmFile)
 rcm_df <- rcm_df[, 2:ncol(rcm_df)]  # Need to have the ensembl gene ID as the first column
 write.csv(rcm_df, sircleFileName, row.names=FALSE)
 
@@ -97,9 +201,9 @@ methFile <- paste0(data_dir, 'CPTAC_cpg_S4.csv')
 rnaFile <- paste0(data_dir, 'CPTAC_RNA_S4.csv')
 
 # Again need to have the ensembl gene ID as the first column
-write.csv(rcm_df[, c(geneId, proteinSamples$FullLabel)],  paste0(data_dir, 'CPTAC_protein_S4.csv'), row.names=FALSE)
-write.csv(rcm_df[, c(geneId, methSamples$FullLabel)], paste0(data_dir, 'CPTAC_cpg_S4.csv'), row.names=FALSE)
-write.csv(rcm_df[, c(geneId, rnaSamples$FullLabel)], paste0(data_dir, 'CPTAC_RNA_S4.csv'), row.names=FALSE)
+#write.csv(rcm_df[, c(geneId, proteinSamples$FullLabel)],  paste0(data_dir, 'CPTAC_protein_S4.csv'), row.names=FALSE)
+#write.csv(rcm_df[, c(geneId, methSamples$FullLabel)], paste0(data_dir, 'CPTAC_cpg_S4.csv'), row.names=FALSE)
+#write.csv(rcm_df[, c(geneId, rnaSamples$FullLabel)], paste0(data_dir, 'CPTAC_RNA_S4.csv'), row.names=FALSE)
 
 sampleLabelColumn <- "FullLabel"
 conditionColumn <- "CondId"
@@ -110,20 +214,22 @@ casesForTraining <- c('C3L.00011', 'C3L.00096', 'C3L.01287', 'C3N.00149', 'C3N.0
        'C3N.00194', 'C3N.00390', 'C3N.01200', 'C3N.01220')
 
 # Training
-sv <- makeSircleStatModel(rcmFile, patientSampleFile, methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile, sampleLabelColumn, conditionColumn, patientIdColumn, NULL, RegulatoryLabel, fromSaved=F, casesForTraining=casesForTraining, outputFolder=data_dir, envName="scircm", runName="Rversion")
+res_sv <- basiliskRun(env=bas_scircm, fun=function(args) {
+    sv <- makeSircleStatModel(rcmFile, patientSampleFile, methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile, sampleLabelColumn, conditionColumn, patientIdColumn, NULL, RegulatoryLabel, fromSaved=F, casesForTraining=casesForTraining, outputFolder=data_dir, envName="scircm", runName="Rversion")
+    # Do something with pandas
+    return(sv)
+})
 
+df <- res_sv$run_vae_stats("gender", "Female", "Male")
+df <- as.data.frame(df)
+  
 # Loading a saved version (just changed the fromSaved flag)
-sv <- makeSircleStatModel(rcmFile, patientSampleFile, methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile, sampleLabelColumn, conditionColumn, patientIdColumn, NULL, RegulatoryLabel, fromSaved=T, casesForTraining=casesForTraining, outputFolder=data_dir, envName="scircm", runName="Rversion")
-
-# Now you can run stats
-statsDf <- runSircleStats(sv, "gender", "Female", "Male")
-statsDf[statsDf['Integrated pval (Male-Female)'] < 0.05] # E.g we can look at things now
-
+#sv <- makeSircleStatModel(rcmFile, patientSampleFile, methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile, sampleLabelColumn, conditionColumn, patientIdColumn, NULL, RegulatoryLabel, fromSaved=T, casesForTraining=casesForTraining, outputFolder=data_dir, envName="scircm", runName="Rversion")
 ```
 
 ### TF analysis using Dorothea
 
-```{r}
+
 # TF analysis
 doroFile <- paste0(data_dir, 'dorothea_hs_ABCD.csv')
 TFPadjCol <- 'padj_rna'
@@ -137,6 +243,5 @@ m_df <- sircleMotif(clusterGeneId, doroFile, sircleRCMFilename, TFPadjCol, TFVal
                      doroLevel=c("A"), clusters=c("TMDE", "TMDS", "MDS", "MDE", "TPDE", "TPDS"), TFInDataset=F, outputDir=data_dir, plotOn=T)
 
 
-```
 
 
