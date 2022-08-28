@@ -38,7 +38,7 @@ rnaFile <- paste0(data_dir, 'rna_DE_Stage IV_sircle_renamed-cols.csv')
 methFile <- paste0(data_dir, 'filtered_cpg_DE_Stage IV_sircle.csv')
 geneId <- 'ensembl_gene_id'
 
-sircleFileName <- "SircleR-RCM.csv"
+sircleFileName <- paste0(data_dir, "SircleR-RCM.csv")
 
 # Use basilisk to create an environment we can use
 bas_scircm <- BasiliskEnvironment(envname="bas_scircm",
@@ -46,7 +46,6 @@ bas_scircm <- BasiliskEnvironment(envname="bas_scircm",
                                    packages=c("numpy==1.20"),
                                   pip=c("scircm==1.0.1")
 )
-
 
 #logFC_rna = column name in your RNA file that has your RNA logFC (same for the protein and CpG)
 #padj_rna = column name in your RNA file that has your padj value (same for protein and CpG)
@@ -77,10 +76,8 @@ Here we train (or load from saved) a VAE and then perform a comparison on two gr
 
 ```{r}
 # VAE on two groups
-rcmFile <- paste0(data_dir, 'RCM.csv')
 
 rcm_df <- read.csv(rcmFile)
-rcm_df <- rcm_df[, 2:ncol(rcm_df)]  # Need to have the ensembl gene ID as the first column
 write.csv(rcm_df, sircleFileName, row.names=FALSE)
 
 proteinSampleFile <- paste0(data_dir, "prot_sample_data_Stage IV_sircle.csv")
@@ -94,10 +91,15 @@ proteinSamples <- read.csv(proteinSampleFile)
 rnaSamples <- read.csv(rnaSampleFile)
 methSamples <- read.csv(methSampleFile)
 
+# Again need to have the ensembl gene ID as the first column
+write.csv(rcm_df[, c(geneId, proteinSamples$FullLabel)],  paste0(data_dir, 'CPTAC_protein_Stage4.csv'), row.names=FALSE)
+write.csv(rcm_df[, c(geneId, methSamples$FullLabel)], paste0(data_dir, 'CPTAC_cpg_Stage4.csv'), row.names=FALSE)
+write.csv(rcm_df[, c(geneId, rnaSamples$FullLabel)], paste0(data_dir, 'CPTAC_RNA_Stage4.csv'), row.names=FALSE)
+
 # Save each output to a csv file 
-proteinFile <- paste0(data_dir, 'CPTAC_protein_S4.csv')
-methFile <- paste0(data_dir, 'CPTAC_cpg_S4.csv')
-rnaFile <- paste0(data_dir, 'CPTAC_RNA_S4.csv')
+proteinFile <- paste0(data_dir, 'CPTAC_protein_Stage4.csv')
+methFile <- paste0(data_dir, 'CPTAC_cpg_Stage4.csv')
+rnaFile <- paste0(data_dir, 'CPTAC_RNA_Stage4.csv')
 
 # Again need to have the ensembl gene ID as the first column
 sampleLabelColumn <- "FullLabel"
