@@ -48,7 +48,7 @@ pip install scircm
 ```
 
 ## Run
-See the examples folder for a proper tutorial with data included that you can run!
+See the folder `data_example` for a proper tutorial with data included that you can run!
 
 #### Quick version
 ```
