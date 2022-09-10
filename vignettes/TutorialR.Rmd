@@ -61,6 +61,7 @@ res <- basiliskRun(env=bas_scircm, fun=function(args) {
     return(rcm)
 })
 
+
 # Plot the sircle function
 sirclePlot(sircleFileName, regLabels="Regulation_Grouping_2") 
 
@@ -76,8 +77,15 @@ Here we train (or load from saved) a VAE and then perform a comparison on two gr
 
 ```{r}
 # VAE on two groups
+rcm_df <- read.csv(sircleFileName)
 
-rcm_df <- read.csv(rcmFile)
+# The first row needs to be the ensembl Gene IDs (or whichever gene Ids you use)
+rcm_df <- rcm_df[, 2:ncol(rcm_df)]
+rcm_df <- as.data.frame(rcm_df)
+
+# Filter to only include data with a regulatory label 
+rcm_df <- rcm_df[rcm_df$Regulation_Grouping_2 != 'None', ]
+rcm_df <- rcm_df[rcm_df$ensembl_gene_id != '0', ]
 write.csv(rcm_df, sircleFileName, row.names=FALSE)
 
 proteinSampleFile <- paste0(data_dir, "prot_sample_data_Stage IV_sircle.csv")
@@ -91,7 +99,7 @@ proteinSamples <- read.csv(proteinSampleFile)
 rnaSamples <- read.csv(rnaSampleFile)
 methSamples <- read.csv(methSampleFile)
 
-# Again need to have the ensembl gene ID as the first column
+# Again need to have the ensembl gene ID as the first column otherwise you will get an error!
 write.csv(rcm_df[, c(geneId, proteinSamples$FullLabel)],  paste0(data_dir, 'CPTAC_protein_Stage4.csv'), row.names=FALSE)
 write.csv(rcm_df[, c(geneId, methSamples$FullLabel)], paste0(data_dir, 'CPTAC_cpg_Stage4.csv'), row.names=FALSE)
 write.csv(rcm_df[, c(geneId, rnaSamples$FullLabel)], paste0(data_dir, 'CPTAC_RNA_Stage4.csv'), row.names=FALSE)
@@ -113,7 +121,7 @@ casesForTraining <- c('C3L.00011', 'C3L.00096', 'C3L.01287', 'C3N.00149', 'C3N.0
 # Training
 # If you have already trained you can change the parameter fromSaved=F,  to fromSaved=T in the function
 res_sv <- basiliskRun(env=bas_scircm, fun=function(args) {
-    sv <- makeSircleStatModel(rcmFile, patientSampleFile, methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile, sampleLabelColumn, conditionColumn, patientIdColumn, NULL, RegulatoryLabel, fromSaved=F,  casesForTraining=casesForTraining, outputFolder=data_dir, envName="scircm", runName="Rversion")
+    sv <- makeSircleStatModel(sircleFileName, patientSampleFile, methFile, methSampleFile, rnaFile, rnaSampleFile, proteinFile, proteinSampleFile, sampleLabelColumn, conditionColumn, patientIdColumn, NULL, RegulatoryLabel, fromSaved=F,  casesForTraining=casesForTraining, outputFolder=data_dir, envName="scircm", runName="Rversion")
     # Do something with pandas
     return(sv)
 })

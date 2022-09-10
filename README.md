@@ -1,33 +1,21 @@
 # sci-RegulatoryClusteringModel
 [![PyPI](https://img.shields.io/pypi/v/scircm)](https://pypi.org/project/scircm/)
 
+
 ## Tutorial
 
-See R tutorial in this folder: https://github.com/ArianeMora/scircm/blob/main/examples/
+See R tutorial in the **vignettes** folder.
+
+If you want to read more about how SiRCle works, please check out our paper: https://www.biorxiv.org/content/10.1101/2022.07.02.498058v1 
 
 ## Install
 
 #### R version
 First install Rtools if you haven't done this yet. There are different versions (windows: https://cran.r-project.org/bin/windows/Rtools/, macOS: https://cran.r-project.org/bin/macosx/tools/)
 
-If you don't have conda, you'll need to do the below, first make sure you have reticulate installed. 
-```
-install.packages('reticulate')
-```
-Create a new environment and install scircm.
-```
-virtualenv_create(
-      envname = "scircm",
-      python = 3.8,
-      packages = "scircm",
-      system_site_packages = getOption("reticulate.virtualenv.system_site_packages",
-                                       default = FALSE)
-    )
-```
+#### R version
 
-Note we expect python 3.8 so if things don't work first time, check you're running python 3.8 and then try again :) 
-
-Now you can install it in R:
+Just install direcly in R:
 
 ```
 #install.packages("devtools")
@@ -35,52 +23,34 @@ library(devtools)
 install_github("ArianeMora/SiRCleR")
 library(sircle)
 ```
+#### Windows 
+Note if you are running **Windows** you might have an issue with long paths, to fix this please you can resolve this in the registry on Windows 10 (Computer Configuration > Administrative Templates > System > Filesystem > Enable Win32 long paths). If you have a different version of Windows, just google "Long paths fix" and your Windows version.
 
-#### Command line version
-Optionally create a new conda env in your terminal (Mac and linux):
+#### Other dependencies 
+
+If you are using the visualisations for the over representation analysis you will need to install the following tools (also cite them!)
+
+#### CRAN packages
 ```
-conda create --name scircm python=3.8
-conda activate scircm
+install.packages('ggnewscale')
+
 ```
-Go to your terminal and type:
-``` 
-pip install scircm
+#### Biocmanager packages
 ```
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("enrichplot")
+BiocManager::install("org.Hs.eg.db")
+BiocManager::install("clusterProfiler")
+```
+
+Also while we have done our best to ensure all the dependencies are documented, if they aren't please let us know! And we will try to resolve them :) 
 
 ## Run
-See the folder `data_example` and `vignettes` for a proper tutorial with data included that you can run!
-
-#### Quick version
-```
-from scircm import SciRCM
-# FORMAT must be csv :) 
-protFile = f'path to the output from protein differential abundance file'
-rnaFile = f'path to the output from differential expression analysis file'
-methFile = f'path to the output from methylation DCpG analysis file'
-geneId <- 'ensembl_gene_id'
-
-sircleFileName <- "SircleR-RCM.csv"
-
-#logFC_rna = column name in your RNA file that has your RNA logFC (same for the protein and CpG)
-#padj_rna = column name in your RNA file that has your padj value (same for protein and CpG)
-#NOTE: these need to be unique from one another since we merge the datasets, if they aren't, you need
-#to update your csv files.
-#Lastly: ensembl_gene_id this is the gene ID column, All must use the same identifier, and this must be
-#labelled the same in each file, if it isn't, update your column names before running.
-
-# Run the sircle RCM this may take some time
-rcm <- sircleRCM(rnaFile, methFile, protFile, geneId,  "logFC_rna", "padj_rna", "CpG_Beta_diff", "padj_meth", "logFC_protein", "padj_protein",
-                 outputFileName = sircleFileName, 
-                 condaEnvName="scircm")
-
-# Plot the sircle function
-sirclePlot(sircleFileName, regLabels="Regulation_Grouping_3") 
-# That DF now has your rcm clustering results, how easy was that :D
-```
+See the **vignettes** folder for a proper tutorial with data included that you can run!
 
 #### Making your CpGs map to a single gene version
-This is only in python at the moment. Please post any issue if you want to do this in R and we'll write a wrapper :)  (https://github.com/ArianeMora/scircm)
-
+This is only in python at the moment if you're interested in this post an issue and I'll work on adding this to the R version :) 
 
 ## Signature Regulatory Clustering model 
 
@@ -116,19 +86,7 @@ The general table of how we define regulatory clusters.
 | No Change        | DOWN      | No Change  | mRNA decrease (TPDS)         | Protein increase (TMDE) | TPDS+TMDE            | TPDS+TMDE            | TMDE                 |
 | No Change        | No Change | No Change  | NoChange                     | NoChange                | NoChange             | NoChange             | NoChange             |
 
-Please post questions and issues related to sci-rcm on the `Issues <https://github.com/ArianeMora/scircm/issues>`_  section of the GitHub repository.
+Please post questions and issues related to sci-rcm on the `Issues`  section of the GitHub repository.
 
-### Developers
 
-```
-bas_scircm <- BasiliskEnvironment(envname="bas_scircm",
-    pkgname="sircle",
-    packages=c("scircm==1.0.1")
-)
 
-res <- basiliskRun(env=bas_scircm, fun=function(args) {
-    out <- reticulate::import("bas_scircm")
-    # Do something with pandas
-    return(some_r_object)
-})
-```
