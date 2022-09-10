@@ -44,7 +44,7 @@ sircleFileName <- paste0(data_dir, "SircleR-RCM.csv")
 bas_scircm <- BasiliskEnvironment(envname="bas_scircm",
                                    pkgname="sircle",
                                    packages=c("numpy==1.20"),
-                                  pip=c("scircm==1.0.1")
+                                  pip=c("scircm==1.0.3")
 )
 
 #logFC_rna = column name in your RNA file that has your RNA logFC (same for the protein and CpG)
