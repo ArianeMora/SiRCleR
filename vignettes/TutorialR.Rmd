@@ -7,11 +7,6 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-## First create an environment 
-
-Note if your computer has an old version of python (i.e. < 3.8) the machine learning might not work, so would recommend installing anaconda, look into reticulate for more details.
-
-https://rstudio.github.io/reticulate/articles/versions.html
 
 ## Install the R package
 
@@ -86,7 +81,7 @@ rcm_df <- as.data.frame(rcm_df)
 # Filter to only include data with a regulatory label 
 rcm_df <- rcm_df[rcm_df$Regulation_Grouping_2 != 'None', ]
 rcm_df <- rcm_df[rcm_df$ensembl_gene_id != '0', ]
-write.csv(rcm_df, sircleFileName, row.names=FALSE)
+write.csv(rcm_df, sircleFileName,  row.names=FALSE)
 
 proteinSampleFile <- paste0(data_dir, "prot_sample_data_Stage IV_sircle.csv")
 methSampleFile <- paste0(data_dir, "cpg_sample_data_Stage IV_sircle.csv")
