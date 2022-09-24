@@ -33,7 +33,8 @@
 #' @return
 #' @export
 
-sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emptyRegLabel="", fileType="pdf", minGSSize=10, qvalueCutoff=0.2) {
+sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emptyRegLabel="", fileType="pdf",
+                           minGSSize=10, qvalueCutoff=0.2) {
   ## ------------ Setup and installs ----------- ##
   packages <- c("org.Hs.eg.db", "clusterProfiler", "svglite", "enrichplot")
   install.packages(setdiff(packages, rownames(installed.packages())))
@@ -61,7 +62,7 @@ sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emp
                           minGSSize = minGSSize,
                           readable = TRUE)
     clusterGoSummary <- data.frame(clusterGo)
-    write_csv(clusterGoSummary, paste('ClusterGoSummary_', g, '.csv', sep=""))#Export the ORA results as .csv
+    write.csv(clusterGoSummary, paste('ClusterGoSummary_', g, '.csv', sep=""))#Export the ORA results as .csv
 
     if (!(dim(clusterGoSummary)[1] == 0)) {#exclude df's that have no observations
       Dotplot <- dotplot(clusterGo, showCategory=30) +
