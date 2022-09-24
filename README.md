@@ -24,7 +24,7 @@ install_github("ArianeMora/SiRCleR")
 library(sircle)
 ```
 #### Windows 
-Note if you are running **Windows** you might have an issue with long paths, to fix this please you can resolve this in the registry on Windows 10 (Computer Configuration > Administrative Templates > System > Filesystem > Enable Win32 long paths). If you have a different version of Windows, just google "Long paths fix" and your Windows version.
+Note if you are running **Windows** you might have an issue with long paths, which you can resolve in the registry on Windows 10 (Computer Configuration > Administrative Templates > System > Filesystem > Enable Win32 long paths). If you have a different version of Windows, just google "Long paths fix" and your Windows version.
 
 #### Other dependencies 
 
