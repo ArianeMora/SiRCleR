@@ -34,7 +34,7 @@
 #' @export
 
 sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emptyRegLabel="", fileType="pdf",
-                           minGSSize=10, qvalueCutoff=0.2) {
+                           minGSSize=10, qvalueCutoff=0.2, pvalueCutoff=0.05, showCatagory=30, outputFolder='') {
   ## ------------ Setup and installs ----------- ##
   packages <- c("org.Hs.eg.db", "clusterProfiler", "svglite", "enrichplot")
   install.packages(setdiff(packages, rownames(installed.packages())))
@@ -59,29 +59,33 @@ sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emp
                           ont = "ALL",
                           pAdjustMethod = "BH",
                           qvalueCutoff = qvalueCutoff,
+                          pvalueCutoff = pvalueCutoff,
                           minGSSize = minGSSize,
                           readable = TRUE)
+    # We have a cutoff of all of them, and then only visualise the ones that the user wants...
+
     clusterGoSummary <- data.frame(clusterGo)
-    write.csv(clusterGoSummary, paste('ClusterGoSummary_', g, '.csv', sep=""))#Export the ORA results as .csv
+    write.csv(clusterGoSummary, paste(outputFolder, 'ClusterGoSummary_', g, '.csv', sep=""))#Export the ORA results as .csv
 
     if (!(dim(clusterGoSummary)[1] == 0)) {#exclude df's that have no observations
-      Dotplot <- dotplot(clusterGo, showCategory=30) +
+      Dotplot <- dotplot(clusterGo, showCategory=showCatagory) +
         ggtitle(paste("Dotplot ", g, sep=""))
-      ggsave(file=paste("SiRCle-ORA_Dotplot_Human_", g, ".", fileType, sep=""), plot=Dotplot, width=10, height=8)
+      ggsave(file=paste(outputFolder, "SiRCle-ORA_Dotplot_Human_", g, ".", fileType, sep=""), plot=Dotplot, width=10, height=8)
       x2 <- pairwise_termsim(clusterGo)
 
       Emapplot <- emapplot(x2, pie_scale=1.5, layout = "nicely")+
         ggtitle(paste("Emapplot ", g, sep=""))
-      ggsave(file=paste("SiRCle-ORA_Emapplot_Human_", g, ".", fileType, sep="" ), plot=Emapplot,width=10, height=8)
+      ggsave(file=paste(outputFolder, "SiRCle-ORA_Emapplot_Human_", g, ".", fileType, sep="" ), plot=Emapplot, width=10, height=8)
 
-      Heatplot <- heatplot(clusterGo,showCategory=30) +
+      Heatplot <- heatplot(clusterGo,showCategory=showCatagory) +
         theme(axis.text.x =element_text(size=5), axis.text.y =element_text(size=8,face="bold"), axis.title=element_text(size=12,face="bold"))+
         ggtitle(paste("Heatplot ", g, sep=""))
-      ggsave(file=paste("SiRCle-ORA_Heatplot_Human_", g, ".", fileType, sep="" ), plot=Heatplot,width=10, height=8)
+      ggsave(file=paste(outputFolder, "SiRCle-ORA_Heatplot_Human_", g, ".", fileType, sep="" ), plot=Heatplot, width=10, height=8)
 
-      }
+    }
   }
 }
+
 
 #' sircleORAMouse
 #'
