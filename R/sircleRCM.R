@@ -405,15 +405,15 @@ sircleFET <- function(rcm, allGenes, genesOfInterest, outputFilename="SiRCle-FET
 
 sircleRCM_R <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPadjCol="padj", methValueCol="Diff", methPadjCol="padj", proteinValueCol="Log2FC", proteinPadjCol="padj", rna_padj_cutoff= 0.05, prot_padj_cutoff = 0.05, meth_padj_cutoff = 0.05,rna_FC_cutoff= 1, prot_FC_cutoff = 0.5, meth_Diff_cutoff = 0.1, backgroundMethod, OutputFileName = "Sircle_RCM.csv"){
   #Import the data:
-  proteinDF <- protFile%>%
+  proteinDF <- as.data.frame(protFile)%>%
     rename("geneID"=paste(geneID),
            "ValueCol"=paste(proteinValueCol),
            "PadjCol"=paste(proteinPadjCol))
-  rnaDF<- rnaFile%>%
+  rnaDF<- as.data.frame(rnaFile)%>%
     rename("geneID"=paste(geneID),
            "ValueCol"=paste(rnaValueCol),
            "PadjCol"=paste(rnaPadjCol))
-  methDF<- methFile%>%
+  methDF<- as.data.frame(methFile)%>%
     rename("geneID"=paste(geneID),
            "ValueCol"=paste(methValueCol),
            "PadjCol"=paste(methPadjCol))
