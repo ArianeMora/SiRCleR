@@ -1,6 +1,6 @@
 ## ---------------------------
 ##
-## Script name: sircleRCM
+## Script name: sircleVAE
 ##
 ## Purpose of script: Performs the main functions of the sircle RCM package.
 ##
@@ -155,4 +155,42 @@ sircleVAE <- function(rcm, df, geneId, configVAEFile, plotVAE=T, plottingCols=NU
     vaeVis$plot_input_distribution(df, geneId, columns=plottingCols, fig_type=figType)
   }
 
+}
+
+
+#' sircleGSEA
+#'
+#' Uses scircm to compute the regulatory clustering model.
+#' @param rcm Instance of RCM after running sircleRCM
+#' @param df Dataframe with the results from the sircleRCM
+#' @param geneId  Gene ID column name in you dataframe
+#' @param numNodes Number of latent nodes in your VAE
+#' @param pathway_list_go A list of pathways for the GSEA (see example for details)
+#' @param fgseaPCutoff  \emph{Optional: } Padjusted cutoff for GSEA data (the other results aren't saved) \strong{Default=0.2}
+#' @param  groupLabels \emph{Optional: } Labels from the groups  \strong{Default=c('MDE', 'MDS', 'TMDE', 'TMDS', 'TPDE', 'TPDE_TMDS', 'TPDS', 'MDS_TMDE', 'TPDS_TMDE', "MDE-ncRNA", "MDS-ncRNA")}
+#' @return
+#' @export
+#'
+sircleGSEA <- function(rcm, df, geneId, numNodes, userPathways, fgseaPCutoff=1.0, fileLabel="GSEA",
+                       groupLabels=c('MDE', 'MDS', 'TMDE', 'TMDS', 'TPDE', 'TPDE_TMDS', 'TPDS', 'MDS_TMDE', 'TPDS_TMDE', "MDE-ncRNA", "MDS-ncRNA")) {
+  ## ------------ Setup and installs ----------- ##
+  packages <- c("fgsea")
+  install.packages(setdiff(packages, rownames(installed.packages())))
+  library(fgsea)
+  
+  for (i in groupLabels) {
+    for (n in 0:numNodes) {
+      rankRegGrp <- rcm$rank_rcm_by_vae(df, i, as.integer(n), geneId)
+      vaeRankValues <- rankRegGrp[[paste("node", as.integer(n), sep="_")]]
+      
+      names(vaeRankValues) <- as.character(rankRegGrp[[geneId]])
+      #run the GSEA analysis
+      fgseaVAE <- fgsea(pathways = userPathways, vaeRankValues, nperm=10000)
+      fgseaVAE <- fgseaVAE[fgseaVAE$padj <= fgseaPCutoff, ]
+      
+      if (nrow(fgseaVAE) > 1) {
+        write_csv(fgseaVAE[,c(-8)], paste("SiRCle-vaeRank-nperm10000-",i, "-Node", n + 1, "_", fileLabel,".csv", sep=""))
+      }
+    }
+  }
 }
