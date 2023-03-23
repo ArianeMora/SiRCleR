@@ -26,8 +26,7 @@ Just install direcly in R:
 
 ```
 #install.packages("devtools")
-library(devtools)
-install_github("ArianeMora/SiRCleR")
+devtools::install_github("https://github.com/ArianeMora/SiRCleR/tree/v1.0.1")
 library(sircle)
 ```
 ### Windows 
