@@ -469,3 +469,258 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
   write.csv(ClusterSummary, paste("Summary_",OutputFileName), row.names = FALSE)
 }
 
+
+#' sircleRCM_RP
+#'
+#' Computes the regulatory clustering model (RCM) using the SiRCle regulatory rules for RNAseq and Proteomics data layers (RP).
+#'
+#' @param rnaFile Filename for your RNAseq data (results from DeSeq2 and also your normalised expression counts)
+#' @param proteinFile Filename/path of you Protein data (results from DeSeq2 and also your normalised expression counts)
+#' @param geneID Column name of geneId this MUST BE THE SAME in each of your protein, RNAseq and DNAmethylation files (we join on this)
+#' @param rnaValueCol Column name of RNA value in rnaFile 
+#' @param rnaPadjCol Column name of RNA p adjusted value in rnaFile 
+#' @param proteinValueCol  Column name of protein log fold change in proteinFile
+#' @param proteinPadjCol Column name of protein p adjusted value in proteinFile
+#' @param rnaPadjCutoff  \emph{Optional: }Padjusted cutoff for RNAseq data \strong{Default=0.05}
+#' @param rnaLogFCCutoff \emph{Optional: } LogFoldchange cutoff for RNAseq data \strong{Default=0.5}
+#' @param proteinPadjCutoff \emph{Optional: } Padjusted cutoff for Protein data \strong{Default=0.05}
+#' @param proteinValueCutoff \emph{Optional: } LogFoldchange cutoff for Protein data \strong{Default=0.3}
+#' @param backgroundMethod \emph{Optional: } Background method (NEED Description for each one here) \strong{Default="P&R"}
+#' @param outputFileName \emph{Optional: } Output filename \strong{Default=SiRCle_RCM.csv}
+#' @return rcm an instance of the rcm package
+#' @export
+#'
+sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPadjCol="padj", proteinValueCol="Log2FC", proteinPadjCol="padj", rna_padj_cutoff= 0.05, prot_padj_cutoff = 0.05,rna_FC_cutoff= 1, prot_FC_cutoff = 0.5, backgroundMethod="P&R", OutputFileName = "Sircle_RCM.csv"){
+  #Import the data:
+  proteinDF <- as.data.frame(protFile)%>%
+    dplyr::rename("geneID"=paste(geneID),
+                  "ValueCol"=paste(proteinValueCol),
+                  "PadjCol"=paste(proteinPadjCol))
+  rnaDF<- as.data.frame(rnaFile)%>%
+    rename("geneID"=paste(geneID),
+           "ValueCol"=paste(rnaValueCol),
+           "PadjCol"=paste(rnaPadjCol))
+  
+  #First check for duplicates in "geneID" and drop if there are any
+  if(length(proteinDF[duplicated(proteinDF$geneID), "geneID"]) > 0){
+    doublons <- as.character(proteinDF[duplicated(proteinDF$geneID), "geneID"])#number of duplications
+    proteinDF <-proteinDF[!duplicated(proteinDF$geneID),]#remove duplications
+    warning("Proteomics dataset contained duplicates based on geneID! Dropping duplicate IDs and kept only the first entry. You had ", length(doublons), " duplicates.")
+    warning("Note that you should do this before running SiRCle.")
+  }
+  if(length(rnaDF[duplicated(rnaDF$geneID), "geneID"]) > 0){
+    doublons <- as.character(rnaDF[duplicated(rnaDF$geneID), "geneID"])#number of duplications
+    rnaDF <-rnaDF[!duplicated(rnaDF$geneID),]#remove duplications
+    warning("RNAseq dataset contained duplicates based on geneID! Dropping duplicate IDs and kept only the first entry. You had ", length(doublons), " duplicates.")
+    warning("Note that you should do this before running SiRCle.")
+  }
+  
+  #Tag genes that are detected in each data layer
+  proteinDF$Detected <- "TRUE"
+  rnaDF$Detected <- "TRUE"
+  
+  #Assign to Group based on individual Cutoff ("UP", "DOWN", "No Change")
+  proteinDF <- proteinDF%>%
+    mutate(Cutoff = case_when(proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol > prot_FC_cutoff ~ 'UP',
+                              proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol < -prot_FC_cutoff ~ 'DOWN',
+                              TRUE ~ 'No Change')) %>%
+    mutate(Cutoff_Specific = case_when(Cutoff == "UP" ~ 'UP',
+                                       Cutoff == "DOWN" ~ 'DOWN',
+                                       Cutoff == "No Change" & proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol > 0 ~ 'Significant Positive',
+                                       Cutoff == "No Change" & proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol < 0 ~ 'Significant Negative',
+                                       Cutoff == "No Change" & proteinDF$PadjCol > prot_padj_cutoff ~ 'Not Significant',
+                                       TRUE ~ 'FALSE'))
+  
+  rnaDF <- rnaDF%>%
+    mutate(Cutoff = case_when(rnaDF$PadjCol < rna_padj_cutoff & rnaDF$ValueCol > rna_FC_cutoff ~ 'UP',
+                              rnaDF$PadjCol < rna_padj_cutoff & rnaDF$ValueCol < -rna_FC_cutoff ~ 'DOWN',
+                              TRUE ~ 'No Change'))
+  
+  #Merge the dataframes together: Merge the supplied RNAseq and proteomics dataframes together. 
+  ##Add prefix to column names to distinguish the different data types after merge
+  colnames(proteinDF) <- paste0("proteinDF_", colnames(proteinDF))
+  proteinDF <- proteinDF%>%
+    rename("geneID" = "proteinDF_geneID")
+  
+  colnames(rnaDF) <- paste0("rnaDF_", colnames(rnaDF))
+  rnaDF <- rnaDF%>%
+    rename("geneID"="rnaDF_geneID")
+  
+  ##Merge
+  MergeDF <- merge(rnaDF, proteinDF, by="geneID", all=TRUE)
+  
+  ##Mark the undetected genes in each data layer
+  MergeDF<-MergeDF %>% 
+    mutate_at(c("proteinDF_Detected","rnaDF_Detected"), ~replace_na(.,"FALSE"))%>% 
+    mutate_at(c("proteinDF_Cutoff","rnaDF_Cutoff"), ~replace_na(.,"No Change"))%>%
+    mutate_at(c("proteinDF_Cutoff_Specific"), ~replace_na(.,"Not Detected"))
+  
+  #Apply Background filter (label genes that will be removed based on choosen background)
+  if(backgroundMethod == "P|R)"){# P|R = Protein OR RNA
+    MergeDF <- MergeDF%>%
+      mutate(BG_Method = case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
+                                   rnaDF_Detected=="TRUE" & proteinDF_Detected=="FALSE" ~ 'TRUE', # Just RNA
+                                   rnaDF_Detected=="FALSE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # Just Protein
+                                   TRUE ~ 'FALSE'))
+  }
+  else if(backgroundMethod == "P&R"){ # Protein AND RNA
+    MergeDF <- MergeDF%>%
+      mutate(BG_Method = case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
+                                   TRUE ~ 'FALSE'))
+  }
+  else if(backgroundMethod == "P"){ # Protein has to be there
+    MergeDF <- MergeDF%>%
+      mutate(BG_Method = case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
+                                   rnaDF_Detected=="FALSE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # Just Protein
+                                   TRUE ~ 'FALSE'))
+  }
+  else if(backgroundMethod == "R"){ # RNA has to be there
+    MergeDF <- MergeDF%>%
+      mutate(BG_Method = case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
+                                   rnaDF_Detected=="TRUE" & proteinDF_Detected=="FALSE" ~ 'TRUE', # Just RNA
+                                   TRUE ~ 'FALSE'))
+  }
+  else if(backgroundMethod == "*"){ # Use all genes as the background
+    MergeDF$BG_Method <- "TRUE"
+  }
+  else{
+    stop("Please use one of the following backgroundMethods: P|R, P&R, P, R, *")#error message
+  }
+  
+  #Assign SiRCle cluster names to the genes
+  MergeDF <- MergeDF%>%
+    mutate(RG1_All = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+                               rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'RNA DOWN + Protein DOWN',#State 1
+                               rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'RNA DOWN + Protein Not Detected',#State 2
+                               rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'RNA DOWN + Protein Not Significant',#State 3
+                               rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'RNA DOWN + Protein Significant Negative',#State 4
+                               rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'RNA DOWN + Protein Significant Positive',#State 5
+                               rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'RNA DOWN + Protein UP',#State 6
+                               
+                               rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'RNA No Change + Protein DOWN',#State 7
+                               rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'RNA No Change + Protein Not Detected',#State 8
+                               rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'RNA No Change + Protein Not Significant',#State 9
+                               rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'RNA No Change + Protein Significant Negative',#State 10
+                               rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'RNA No Change + Protein Significant Positive',#State 11
+                               rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'RNA No Change + Protein UP',#State 6
+                               
+                               rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'RNA UP + Protein DOWN',#State 12
+                               rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'RNA UP + Protein Not Detected',#State 13
+                               rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'RNA UP + Protein Not Significant',#State 14
+                               rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'RNA UP + Protein Significant Negative',#State 15
+                               rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'RNA UP + Protein Significant Positive',#State 16
+                               rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'RNA UP + Protein UP',#State 17
+                               TRUE ~ 'NA'))%>%
+    mutate(RG2_Changes = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+                                   rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDS',#State 1
+                                   rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'TPDS_TMDE',#State 2
+                                   rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'TPDS_TMDE',#State 3
+                                   rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'TPDS',#State 4
+                                   rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'TPDS_TMDE',#State 5
+                                   rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDS_TMDE',#State 6
+                                   
+                                   rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 7
+                                   rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'None',#State 8
+                                   rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'None',#State 9
+                                   rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 10
+                                   rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 11
+                                   rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 6
+                                   
+                                   rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDE_TMDS',#State 12
+                                   rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'TPDE_TMDS',#State 13
+                                   rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'TPDE_TMDS',#State 14
+                                   rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'TPDE_TMDS',#State 15
+                                   rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'TPDE',#State 16
+                                   rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDE',#State 17
+                                   TRUE ~ 'NA'))%>%
+    mutate(RG3_Protein = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+                                   rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDS',#State 1
+                                   rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'TPDS',#State 2
+                                   rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'TPDS',#State 3
+                                   rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'TPDS',#State 4
+                                   rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'TMDE',#State 5
+                                   rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 6
+                                   
+                                   rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 7
+                                   rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'None',#State 8
+                                   rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'None',#State 9
+                                   rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 10
+                                   rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 11
+                                   rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 6
+                                   
+                                   rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 12
+                                   rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'TPDE',#State 13
+                                   rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'TPDE',#State 14
+                                   rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'TMDS',#State 15
+                                   rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'TPDE',#State 16
+                                   rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDE',#State 17
+                                   TRUE ~ 'NA'))%>%
+    mutate(RG4_Detection = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+                                     rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDS',#State 1
+                                     rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'TPDS',#State 2
+                                     rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'TPDS_TMDE',#State 3
+                                     rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'TPDS',#State 4
+                                     rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'TPDS_TMDE',#State 5
+                                     rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDS_TMDE',#State 6
+                                     
+                                     rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 7
+                                     rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'None',#State 8
+                                     rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'None',#State 9
+                                     rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 10
+                                     rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 11
+                                     rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 6
+                                     
+                                     rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDE_TMDS',#State 12
+                                     rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'TPDE',#State 13
+                                     rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'TPDE_TMDS',#State 14
+                                     rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'TPDE_TMDS',#State 15
+                                     rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'TPDE',#State 16
+                                     rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDE',#State 17
+                                     TRUE ~ 'NA'))
+  
+  #Safe the DF and return the groupings
+  ##RCM DF (Merged InputDF filtered for background with assigned SiRcle cluster names)
+  MergeDF_Select1 <- MergeDF[, c("geneID", "rnaDF_Detected","rnaDF_ValueCol","rnaDF_PadjCol","rnaDF_Cutoff", "proteinDF_Detected", "proteinDF_ValueCol","proteinDF_PadjCol","proteinDF_Cutoff", "proteinDF_Cutoff_Specific", "BG_Method", "RG1_All", "RG2_Changes", "RG3_Protein", "RG4_Detection")]
+  
+  proteinValueCol_Unique<-paste("proteinDF_",proteinValueCol)
+  proteinPadjCol_Unique <-paste("proteinDF_",proteinPadjCol)
+  rnaValueCol_Unique<-paste("rnaDF_",rnaValueCol)
+  rnaPadjCol_Unique <-paste("rnaDF_",rnaPadjCol)
+  
+  MergeDF_Select2<- subset(MergeDF, select=-c(rnaDF_Detected,rnaDF_Cutoff, proteinDF_Detected,proteinDF_Cutoff, proteinDF_Cutoff_Specific, BG_Method, RG1_All, RG2_Changes, RG3_Protein, RG4_Detection))%>%
+    rename(!!proteinValueCol_Unique :="proteinDF_ValueCol",#This syntax is needed since paste(geneID)="geneID" is not working in dyplr
+           !!proteinPadjCol_Unique :="proteinDF_PadjCol",
+           !!rnaValueCol_Unique :="rnaDF_ValueCol",
+           !!rnaPadjCol_Unique :="rnaDF_PadjCol")
+  
+  MergeDF_Rearrange <- merge(MergeDF_Select1, MergeDF_Select2, by="geneID")
+  
+  write.csv(MergeDF_Rearrange, OutputFileName, row.names = FALSE)
+  return(MergeDF_Rearrange)
+  
+  ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
+  ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
+    count(RG1_All, name="Number of Genes")%>%
+    rename("SiRCle cluster Name"= "RG1_All")
+  ClusterSummary_RG1$`Regulation Grouping` <- "RG1_All"
+  
+  ClusterSummary_RG2 <- MergeDF_Rearrange[,c("geneID", "RG2_Changes")]%>%
+    count(RG2_Changes, name="Number of Genes")%>%
+    rename("SiRCle cluster Name"= "RG2_Changes")
+  ClusterSummary_RG2$`Regulation Grouping` <- "RG2_Changes"
+  
+  ClusterSummary_RG3 <- MergeDF_Rearrange[,c("geneID", "RG3_Protein")]%>%
+    count(RG3_Protein, name="Number of Genes")%>%
+    rename("SiRCle cluster Name"= "RG3_Protein")
+  ClusterSummary_RG3$`Regulation Grouping` <- "RG3_Protein"
+  
+  ClusterSummary_RG4 <- MergeDF_Rearrange[,c("geneID","RG4_Detection")]%>%
+    count(RG4_Detection, name="Number of Genes")%>%
+    rename("SiRCle cluster Name"= "RG4_Detection")
+  ClusterSummary_RG4$`Regulation Grouping` <- "RG4_Detection"
+  
+  ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3 , ClusterSummary_RG4)
+  ClusterSummary <- ClusterSummary[,c(3,1,2)]
+  
+  write.csv(ClusterSummary, paste("Summary_",OutputFileName), row.names = FALSE)
+}
