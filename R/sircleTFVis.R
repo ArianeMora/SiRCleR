@@ -10,6 +10,7 @@
 ##
 ## Copyright (c) Christina Schmidt and Ariane Mora
 ## Email:
+## Email: ariane.n.mora@gmail.com
 ##
 ## ---------------------------
 ##
