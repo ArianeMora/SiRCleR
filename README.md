@@ -54,11 +54,7 @@ Note if you are running **Windows** you might have an issue with long paths, whi
 ## Run
 See the **vignettes** folder for a proper tutorial with data included that you can run!
 
-#### Making your CpGs map to a single gene version
-This is only in python at the moment if you're interested in this post an issue and I'll work on adding this to the R version :) 
-
-## Signature Regulatory Clustering model 
-
+## Questions & Issues
 Please post questions and issues related to sci-rcm on the `Issues`  section of the GitHub repository.
 
 ## Citation
