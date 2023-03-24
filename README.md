@@ -1,11 +1,11 @@
 # SiRCleR: Signature Regulatory Clustering package
 ## Overview
 The **S**ignature **R**egulatory **Cl**ust**e**ring (SiRCle) method integrates DNA methylation, RNA-seq and proteomics data at the gene level to deconvolute the association between dysregulation within and across possible regulatory layers (DNA methylation, transcription and/or translation).
-Based on logical regulatory rules, `sircleRCM`, genes are grouped in SiRCle clusters based on the layer (DNA methylation, transcription and/or translation) where dys-regulation first occurs.
+Based on logical regulatory rules, `sircleRCM`, genes are grouped in SiRCle clusters based on the layer (DNA methylation, transcription and/or translation) where dys-regulation first occurs.\
+Using the output of `sircleRCM`, the SiRCle clusters, one can find the primary biological processes altered by applying Over Representation Analysis (ORA) (**`sircleORA`**) and the drivers behind it using Transcription Factor (TF) analysis (**`sircleTF`**).\
+Lastly, to compare patient’s subsets (e.g. based on stage), we found that integrating across the data layers prior to performing differential analysis and biological enrichment better captures the biological signal. Hence we use a variational autoencoder (VAE) to learn gene-wise relationships across the three data layers to obtain an integrated value for each gene (**`sircleVAE`**). Unsing the integarted value we next perform a Mann-Whitney U test to identify genes with a significant integrated difference between the patient's groups.
 
-
-Using the output of `sircleRCM`, the SiRCle clusters, one can find the primary biological processes altered by applying Over Representation Analysis (ORA) and the drivers behind it using Transcription Factor (TF) analysis.
-
+![](https://www.biorxiv.org/content/biorxiv/early/2022/07/04/2022.07.02.498058/F6.large.jpg?width=800&height=600&carousel=1)
 
 **`sircleRCM` functions create the SiRCle Regulatory Clustering Model (RCM) based on logical regulatory rules, which in turn can be used for further downstream analysis:**
 * SiRCle Regulatory Clustering Model Visualisation (**`sircleRCMVis`**)
