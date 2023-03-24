@@ -17,13 +17,14 @@ sircleMotif(
   doroLevel = c("A"),
   clusters = c("MDS", "MDE", "TPDE", "TPDS"),
   outputFilename = "SiRCle-motif.csv",
-  outputDir = ""
+  outputDir = "",
+  plotOn = T
 )
 }
 \arguments{
-\item{clusterGeneId}{Column name with the gene identifier}
+\item{clusterGeneId}{Column name with the gene identifier (note this must match the TF ids used in DoRoTHea i.e. gene name)}
 
-\item{doroFile}{Filename/path of the file from Dorothea which has A,B,C,D relationships}
+\item{doroFile}{Filename/path of the output from Dorothea}
 
 \item{sircleRCMFilename}{Filename/path of the output from sircleRCM}
 
@@ -31,25 +32,23 @@ sircleMotif(
 
 \item{TFValueCol}{Column name of  rna value for the TF (could also use the proteomics logfc)}
 
-\item{TargetPadjCol}{Column name of the padjusted value in the sircleRCMFilename file (i.e. your RNAseq, or your protein p column)}
+\item{TFInDataset}{Whether or not you require the TF to be expressed in the dataframe}
 
-\item{TargetValueCol}{Column name of  rna value for the TF (could also use the proteomics logfc)}
+\item{doroLevel}{level(s) from Dorothea (i.e. A - D) see DoRoThea for more info.}
 
-\item{RegulatoryLabel}{Column name of the regulatory labels}
+\item{clusters}{clusters to test for enrichment.}
 
-\item{TFInDataset}{\emph{Optional: } Whether or not you require the TF to be expressed in the dataframe}
+\item{outputFilename}{Filename for the output file.}
 
-\item{doroLevel}{\emph{Optional: } level(s) of doro as a list \strong{Default=c("A")}}
+\item{plotOn}{Whether or not to plot the results}
 
-\item{clusters}{\emph{Optional: } clusters to investigate \strong{Default=c("MDS", "MDE", "TPDE", "TPDS")}}
+\item{pDisplayCutoff}{Cutoff for the clusters (only returns results less than this, usually 0.05)}
 
-\item{outputFilename}{\emph{Optional: } Filename for the output file.}
-
-\item{outputDir}{\emph{Optional: } Full path for output directory.}
+\item{ouputDir}{Directory for saving}
 }
 \value{
-scimo an instance of the scimo package
+DF of the results
 }
 \description{
-Uses dorothea to find TFs enriched in clusters
+Uses known TF interactions from DoRoThea and then finds enrichment of TF-Target relationships in clusters.
 }

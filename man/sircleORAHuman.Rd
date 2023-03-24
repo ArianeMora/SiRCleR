@@ -11,7 +11,10 @@ sircleORAHuman(
   emptyRegLabel = "",
   fileType = "pdf",
   minGSSize = 10,
-  qvalueCutoff = 0.2
+  qvalueCutoff = 0.2,
+  pvalueCutoff = 0.05,
+  showCatagory = 30,
+  outputFolder = ""
 )
 }
 \arguments{
