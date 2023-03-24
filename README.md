@@ -1,10 +1,10 @@
 # SiRCleR: Signature Regulatory ClusteRing package
-**"sircleRCM" creates the SiRCle Regulatory Clustering Model (RCM) based on logical regulatory rules, which can be used for downstream analysis:**
-* SiRCle Regulatory Clustering Model Visualisation (**RCMVis**)
-* Over Representation Analysis (**ORA**) on the individual SiRCle clusters
-* Fishers Exact Test (**FET**) for data overlay on the individual SiRCle clusters
-* Transcription Factor (**TF**) analysis based on Dorothea regulons or motif analysis on the individual SiRCle clusters and TF visualisation (**TFVis**)
-* Variational Autoencoder (**VAE**) statistics
+**`sircleRCM` functions create the SiRCle Regulatory Clustering Model (RCM) based on logical regulatory rules, which in turn can be used for further downstream analysis:**
+* SiRCle Regulatory Clustering Model Visualisation (**`sircleRCMVis`**)
+* Over Representation Analysis (**`sircleORA`**) on the individual SiRCle clusters
+* Fishers Exact Test (**`sircleFET`**) for data overlay on the individual SiRCle clusters
+* Transcription Factor (**`sircleTF`**) analysis based on Dorothea regulons or motif analysis on the individual SiRCle clusters and TF visualisation (**`sircleTFVis`**)
+* Variational Autoencoder (**`sircleVAE`**) statistics
 
 [![PyPI](https://img.shields.io/pypi/v/scircm)](https://pypi.org/project/scircm/)
 
