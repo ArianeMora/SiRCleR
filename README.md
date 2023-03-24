@@ -62,4 +62,4 @@ This is only in python at the moment if you're interested in this post an issue 
 Please post questions and issues related to sci-rcm on the `Issues`  section of the GitHub repository.
 
 ## Citation
- Ariane Mora,  Christina Schmidt,  Brad Balderson, Christian Frezza & ProfileMikael Bodén 2022. SiRCle (Signature Regulatory Clustering) model integration reveals mechanisms of phenotype regulation in renal cancer. BioRxiv. https://doi.org/10.1101/2022.07.02.498058
+Ariane Mora,  Christina Schmidt,  Brad Balderson, Christian Frezza & ProfileMikael Bodén 2022. SiRCle (Signature Regulatory Clustering) model integration reveals mechanisms of phenotype regulation in renal cancer. BioRxiv. https://doi.org/10.1101/2022.07.02.498058
