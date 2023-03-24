@@ -52,10 +52,10 @@ Note if you are running **Windows** you might have an issue with long paths, whi
 (If you have a different version of Windows, just google "Long paths fix" and your Windows version)
 
 ## Run
-See the **vignettes** folder for a proper tutorial with data included that you can run!
+See the **vignettes** folder for a proper tutorial including data you can run the functions with.
 
 ## Questions & Issues
-Please post questions and issues related to sci-rcm on the `Issues`  section of the GitHub repository.
+Please post questions and issues related to **`SiRCleR`** functions on the `Issues`  section of this GitHub repository.
 
 ## Citation
 Ariane Mora,  Christina Schmidt,  Brad Balderson, Christian Frezza & ProfileMikael Bodén 2022. SiRCle (Signature Regulatory Clustering) model integration reveals mechanisms of phenotype regulation in renal cancer. BioRxiv. https://doi.org/10.1101/2022.07.02.498058
