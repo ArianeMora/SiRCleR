@@ -1,5 +1,5 @@
 # SiRCleR: Signature Regulatory ClusteRing package
-**Creates the SiRCle Regulatory Clustering Model (RCM) based on logical regulatory rules, which can be used for downstream analysis:**
+**"sircleRCM" creates the SiRCle Regulatory Clustering Model (RCM) based on logical regulatory rules, which can be used for downstream analysis:**
 * SiRCle Regulatory Clustering Model Visualisation (**RCMVis**)
 * Over Representation Analysis (**ORA**) on the individual SiRCle clusters
 * Fishers Exact Test (**FET**) for data overlay on the individual SiRCle clusters
