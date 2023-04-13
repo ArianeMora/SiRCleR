@@ -439,7 +439,8 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
   
   MergeDF_Rearrange <- merge(MergeDF_Select1, MergeDF_Select2, by="geneID")
   
-  write.csv(MergeDF_Rearrange, OutputFileName, row.names = FALSE)
+  write.csv(MergeDF_Rearrange, paste(OutputFileName, ".csv". sep=""), row.names = FALSE)
+  assign(OutputFileName, MergeDF_Rearrange, envir=.GlobalEnv)
   
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
   ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
@@ -465,9 +466,8 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
   ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3 , ClusterSummary_RG4)
   ClusterSummary <- ClusterSummary[,c(3,1,2)]
   
-  write.csv(ClusterSummary, paste("Summary_",OutputFileName), row.names = FALSE)
-  
-   return(MergeDF_Rearrange)
+  write.csv(ClusterSummary, paste("Summary_",OutputFileName, ".csv". sep=""), row.names = FALSE)
+  assign(paste("Summary_",OutputFileName, sep=""), ClusterSummary, envir=.GlobalEnv)
 }
 
 
@@ -696,8 +696,8 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
   
   MergeDF_Rearrange <- merge(MergeDF_Select1, MergeDF_Select2, by="geneID")
   
-  write.csv(MergeDF_Rearrange, OutputFileName, row.names = FALSE)
-  return(MergeDF_Rearrange)
+  write.csv(MergeDF_Rearrange, paste(OutputFileName, ".csv". sep=""), row.names = FALSE)
+  assign(OutputFileName, MergeDF_Rearrange, envir=.GlobalEnv)
   
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
   ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
@@ -723,5 +723,6 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
   ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3 , ClusterSummary_RG4)
   ClusterSummary <- ClusterSummary[,c(3,1,2)]
   
-  write.csv(ClusterSummary, paste("Summary_",OutputFileName), row.names = FALSE)
+  write.csv(ClusterSummary, paste("Summary_",OutputFileName, ".csv". sep=""), row.names = FALSE)
+  assign(paste("Summary_",OutputFileName, sep=""), ClusterSummary, envir=.GlobalEnv)
 }
