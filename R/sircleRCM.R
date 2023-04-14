@@ -442,7 +442,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
   #Create Folder, Safe file and return to environment:
   SiRCleRCM_results_folder = paste(getwd(), "/SiRCleRCM",  sep="")
   if (!dir.exists(SiRCleRCM_results_folder)) {dir.create(SiRCleRCM_results_folder)}#
-  SiRCleRCM_MRP_results_folder = paste(SiRCleRCM_MRP_results_folder, "/SiRCleRCM_MRP_",Sys.Date(), sep="")
+  SiRCleRCM_MRP_results_folder = paste(SiRCleRCM_results_folder, "/SiRCleRCM_MRP_",Sys.Date(), sep="")
   if (!dir.exists(SiRCleRCM_MRP_results_folder)) {dir.create(SiRCleRCM_MRP_results_folder)}  # check and create folder
   
   write.csv(MergeDF_Rearrange, paste("SiRCleRCM/SiRCleRCM_MRP_", Sys.Date(), "/", OutputFileName, ".csv", sep=""), row.names = FALSE)
@@ -705,7 +705,7 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
   #Create Folder, Safe file and return to environment:
   SiRCleRCM_results_folder = paste(getwd(), "/SiRCleRCM",  sep="")
   if (!dir.exists(SiRCleRCM_results_folder)) {dir.create(SiRCleRCM_results_folder)}#
-  SiRCleRCM_RP_results_folder = paste(SiRCleRCM_RP_results_folder, "/SiRCleRCM_RP_",Sys.Date(), sep="")
+  SiRCleRCM_RP_results_folder = paste(SiRCleRCM_results_folder, "/SiRCleRCM_RP_",Sys.Date(), sep="")
   if (!dir.exists(SiRCleRCM_RP_results_folder)) {dir.create(SiRCleRCM_RP_results_folder)}  # check and create folder
   
   write.csv(MergeDF_Rearrange, paste("SiRCleRCM/SiRCleRCM_RP_", Sys.Date(), "/", OutputFileName, ".csv", sep=""), row.names = FALSE)
