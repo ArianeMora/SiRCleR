@@ -162,6 +162,7 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
 #' @param maxGSSize \emph{Optional: } maximum group size in ORA \strong{default: 1000}
 #' @param Plot_p.adj \emph{Optional: } q value cutoff from ORA that should be plotted \strong{default: 0.2}
 #' @param Plot_Percentage \emph{Optional: } Percentage of genes that are detected of a pathway \strong{default: 10}
+#'
 #' @return
 #' @export
 
@@ -224,7 +225,7 @@ sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyR
           ggtitle(paste("Dotplot ", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_Dotplot_Human_", g,"_" ,enricher_PathwayName, ".", fileType, sep=""), plot=Dotplot, width=10, height=8)
         #2. Emapplot
-        x2 <- pairwise_termsim(clusterGo)
+        x2 <- enrichplot::pairwise_termsim(clusterGo)
         Emapplot <-  enrichplot::emapplot(x2, pie_scale=1.5, layout = "nicely")+
           ggtitle(paste("Emapplot", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_Emapplot_Human_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=Emapplot, width=10, height=8)
