@@ -167,15 +167,8 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
 
 sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="", enricher_geneID, enricher_Pathways, enricher_PathwayName="", fileType="pdf", minGSSize=10, maxGSSize=1000 , Plot_p.adj=0.2, Plot_Percentage=10, outputFolder=''){
   ## ------------ Setup and installs ----------- ##
-  packages <- c("org.Hs.eg.db", "clusterProfiler", "svglite", "enrichplot", "viridis", "ggupset")
+  packages <- c(="clusterProfiler", "enrichplot", "ggupset")
   install.packages(setdiff(packages, rownames(installed.packages())))
-  library(org.Hs.eg.db)
-  library(clusterProfiler)
-  library(svglite)
-  library(enrichplot)
-  library(viridis)
-  library(viridisLite)
-  library(ggupset)
   ## ------------ Run ----------- ##
   # open the data
   df <- read.csv(filename)
