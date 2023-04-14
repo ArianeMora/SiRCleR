@@ -9,6 +9,7 @@ sircleORAHuman(
   entrezId,
   regLabels = "RegulatoryLabels",
   emptyRegLabel = "",
+  RemoveBackgroundGenes = "TRUE",
   fileType = "pdf",
   minGSSize = 10,
   qvalueCutoff = 0.2,

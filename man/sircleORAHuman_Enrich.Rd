@@ -8,6 +8,7 @@ sircleORAHuman_Enrich(
   filename,
   regLabels = "RegulatoryLabels",
   emptyRegLabel = "",
+  RemoveBackgroundGenes = "TRUE",
   enricher_geneID,
   enricher_Pathways,
   enricher_PathwayName = "",
