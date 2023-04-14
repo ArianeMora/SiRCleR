@@ -26,6 +26,7 @@
 #' @param entrezId Column name for the entrez ID
 #' @param regLabels \emph{Optional: } regLabels The label of the column with the regulatory labels \strong{default: "RegulatoryLabels"}
 #' @param emptyRegLabel \emph{Optional: } emptyRegLabel The label of the empty regulatory group \strong{default: ""}
+#' @paramRemoveBackgroundGenes\emph{Optional: } If TRUE, genes that fall into background based on the choosen Background method for SiRCle RCM are removed from the universe. \strong{default: "TRUE"}
 #' @param fileType \emph{Optional: } fileType Output file type for the figures one of: "svg", "pdf", "png" \strong{default: "pdf"}
 #' @param minGSSize \emph{Optional: } minimum group size in ORA \strong{default: 10}
 #' @param qvalueCutoff \emph{Optional: } q value cutoff from ORA \strong{default: 0.2}
@@ -33,7 +34,7 @@
 #' @return
 #' @export
 
-sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emptyRegLabel="", fileType="pdf",
+sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emptyRegLabel="", RemoveBackgroundGenes="TRUE", fileType="pdf",
                            minGSSize=10, qvalueCutoff=0.2, pvalueCutoff=0.05, showCatagory=30, outputFolder='') {
   ## ------------ Setup and installs ----------- ##
   packages <- c("org.Hs.eg.db", "clusterProfiler", "svglite", "enrichplot")
@@ -44,7 +45,12 @@ sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emp
   library(enrichplot)
   ## ------------ Run ----------- ##
   # open the data
-  df <- read.csv(filename)
+  if(RemoveBackgroundGenes=="TRUE"){
+    df <- read.csv(filename)
+    df <- subset(df, ! df[[BG_Method]] == FALSE)
+  } else{
+    df <- read.csv(filename)
+  }
   allGenes <- as.character(df[[entrezId]]) #
   clusterGenes <- subset(df, ! df[[regLabels]] == emptyRegLabel)
   grps_labels <- unlist(unique(clusterGenes[regLabels]))
@@ -109,7 +115,8 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
   ## ------------ Run ----------- ##
 
   # open the data
-  df <- read.csv(filename)
+    df <- read.csv(filename)
+  
   allGenes <- as.character(df[[entrezId]])# I had to add as.character
   clusterGenes <- subset(df, ! df[[regLabels]] == emptyRegLabel)
   #oraDir <- "ora_figs" #This did not work for me, and I just had to make the folder myself before running the code
@@ -154,6 +161,7 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
 #' @param filename Path to the input file
 #' @param regLabels \emph{Optional: } regLabels The label of the column with the regulatory labels \strong{default: "RegulatoryLabels"}
 #' @param emptyRegLabel \emph{Optional: } emptyRegLabel The label of the empty regulatory group \strong{default: ""}
+#' @paramRemoveBackgroundGenes\emph{Optional: } If TRUE, genes that fall into background based on the choosen Background method for SiRCle RCM are removed from the universe. \strong{default: "TRUE"}
 #' @param enricher_geneID Provide column name for the gene ID. Needs to match the the gene ID in the pathway file provided
 #' @param enricher_Pathways Provide pathway file. Pathway file must include column "term" with the pathway name, column "gene" with the gene name and column "Description" with pathway description that will be depicted on the plots.
 #' @param enricher_PathwayName \emph{Optional: } Name of the pathway list used \strong{default: ""}
@@ -166,13 +174,18 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
 #' @return
 #' @export
 
-sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="", enricher_geneID, enricher_Pathways, enricher_PathwayName="", fileType="pdf", minGSSize=10, maxGSSize=1000 , Plot_p.adj=0.2, Plot_Percentage=10, outputFolder=''){
+sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="", RemoveBackgroundGenes="TRUE", enricher_geneID, enricher_Pathways, enricher_PathwayName="", fileType="pdf", minGSSize=10, maxGSSize=1000 , Plot_p.adj=0.2, Plot_Percentage=10, outputFolder=''){
   ## ------------ Setup and installs ----------- ##
   packages <- c("clusterProfiler", "enrichplot", "ggupset")
   install.packages(setdiff(packages, rownames(installed.packages())))
   ## ------------ Run ----------- ##
   # open the data
-  df <- read.csv(filename)
+   if(RemoveBackgroundGenes=="TRUE"){
+    df <- read.csv(filename)
+    df <- subset(df, ! df[[BG_Method]] == FALSE)
+  } else{
+    df <- read.csv(filename)
+  }
   
   #Select universe and SiRCle clusters
   allGenes <- as.character(df[[enricher_geneID]]) #
