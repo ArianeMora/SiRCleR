@@ -198,16 +198,16 @@ sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyR
     grpGenes <- subset(df, df[[regLabels]] == g)
     print(g)
     print(dim(grpGenes))
-    clusterGo <- enricher(gene=as.character(grpGenes[[enricher_geneID]]),
-                          pvalueCutoff = 1,
-                          pAdjustMethod = "BH",
-                          universe = allGenes,
-                          minGSSize=minGSSize,
-                          maxGSSize=maxGSSize,
-                          qvalueCutoff = 1,
-                          #gson  = NULL,
-                          TERM2GENE=Term2gene ,
-                          TERM2NAME = term2name)
+    clusterGo <- clusterProfiler::enricher(gene=as.character(grpGenes[[enricher_geneID]]),
+                                            pvalueCutoff = 1,
+                                            pAdjustMethod = "BH",
+                                            universe = allGenes,
+                                            minGSSize=minGSSize,
+                                            maxGSSize=maxGSSize,
+                                            qvalueCutoff = 1,
+                                            #gson  = NULL,
+                                            TERM2GENE=Term2gene ,
+                                            TERM2NAME = term2name)
     clusterGoSummary <- data.frame(clusterGo)
     if (!(dim(clusterGoSummary)[1] == 0)){
       #Add pathway information (% of genes in pathway detected)
@@ -227,36 +227,18 @@ sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyR
       if (!(dim(clusterGoSummary_Select)[1] == 0)) {#exclude df's that have no observations
         clusterGo@result <- clusterGoSummary_Select[,1:9]
         #1. Dotplot:
-        Dotplot <- dotplot(clusterGo, showCategory=length(clusterGoSummary_Select)) +
+        Dotplot <-  enrichplot::dotplot(clusterGo, showCategory=length(clusterGoSummary_Select)) +
           ggtitle(paste("Dotplot ", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_Dotplot_Human_", g,"_" ,enricher_PathwayName, ".", fileType, sep=""), plot=Dotplot, width=10, height=8)
         #2. Emapplot
         x2 <- pairwise_termsim(clusterGo)
-        Emapplot <- emapplot(x2, pie_scale=1.5, layout = "nicely")+
+        Emapplot <-  enrichplot::emapplot(x2, pie_scale=1.5, layout = "nicely")+
           ggtitle(paste("Emapplot", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_Emapplot_Human_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=Emapplot, width=10, height=8)
-        #3. CNetplot:
-        #NamedNumeric <-df$Log2FC
-        #amedNumeric <- setNames(NamedNumeric, df$external_gene_name)
-        #Cnetplot<- cnetplot(clusterGo,
-        #                    node_label="all",
-        #                    cex_label_gene = 0.5,
-         #                   cex_label_category = 0.8,
-         #                   color_category='firebrick',
-         #                   foldChange=NamedNumeric)+ 
-         # scale_color_gradient2(name='Protein Log2FC', low='darkgreen', high='firebrick')+
-         # ggtitle(paste("Cnetplot", g, enricher_PathwayName, sep=" "))
-        #ggsave(file=paste(outputFolder, "SiRCle-ORA_Cnetplot_Human_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=Cnetplot, width=10, height=8)
         #4. Upsetplot:
-        UpsetPlot <- upsetplot(clusterGo)+
+        UpsetPlot <-  enrichplot::upsetplot(clusterGo)+
           ggtitle(paste("UpsetPlot", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_UpsetPlot_Human_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=UpsetPlot, width=10, height=8)
-        #5. Heatplot:
-        #Heatplot <- heatplot(clusterGo, foldChange=NamedNumeric) +
-        # theme(axis.text.x =element_text(size=5), axis.text.y =element_text(size=8,face="bold"), axis.title=element_text(size=12,face="bold"))+
-        # ggtitle(paste("Heatplot", g, enricher_PathwayName, sep=" "))
-        #ggsave(file=paste(outputFolder, "SiRCle-ORA_Heatplot_Human_", g,"_", enricher_PathwayName, fileType, sep="" ), plot=Heatplot, width=10, height=8)
-        
       }
     }
   }
