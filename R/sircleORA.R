@@ -236,17 +236,17 @@ sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyR
           ggtitle(paste("Emapplot", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_Emapplot_Human_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=Emapplot, width=10, height=8)
         #3. CNetplot:
-        NamedNumeric <-df$Log2FC
-        NamedNumeric <- setNames(NamedNumeric, df$external_gene_name)
-        Cnetplot<- cnetplot(clusterGo,
-                            node_label="all",
-                            cex_label_gene = 0.5,
-                            cex_label_category = 0.8,
-                            color_category='firebrick',
-                            foldChange=NamedNumeric)+ 
-          scale_color_gradient2(name='Protein Log2FC', low='darkgreen', high='firebrick')+
-          ggtitle(paste("Cnetplot", g, enricher_PathwayName, sep=" "))
-        ggsave(file=paste(outputFolder, "SiRCle-ORA_Cnetplot_Human_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=Cnetplot, width=10, height=8)
+        #NamedNumeric <-df$Log2FC
+        #amedNumeric <- setNames(NamedNumeric, df$external_gene_name)
+        #Cnetplot<- cnetplot(clusterGo,
+        #                    node_label="all",
+        #                    cex_label_gene = 0.5,
+         #                   cex_label_category = 0.8,
+         #                   color_category='firebrick',
+         #                   foldChange=NamedNumeric)+ 
+         # scale_color_gradient2(name='Protein Log2FC', low='darkgreen', high='firebrick')+
+         # ggtitle(paste("Cnetplot", g, enricher_PathwayName, sep=" "))
+        #ggsave(file=paste(outputFolder, "SiRCle-ORA_Cnetplot_Human_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=Cnetplot, width=10, height=8)
         #4. Upsetplot:
         UpsetPlot <- upsetplot(clusterGo)+
           ggtitle(paste("UpsetPlot", g, enricher_PathwayName, sep=" "))
