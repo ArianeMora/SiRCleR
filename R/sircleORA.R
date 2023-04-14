@@ -47,10 +47,11 @@ sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emp
   # open the data
   if(RemoveBackgroundGenes=="TRUE"){
     df <- read.csv(filename)
-    df <- subset(df, ! df[[BG_Method]] == FALSE)
+    df <- subset(df, ! df$BG_Method == "FALSE")
   } else{
     df <- read.csv(filename)
   }
+
   allGenes <- as.character(df[[entrezId]]) #
   clusterGenes <- subset(df, ! df[[regLabels]] == emptyRegLabel)
   grps_labels <- unlist(unique(clusterGenes[regLabels]))
@@ -180,9 +181,9 @@ sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyR
   install.packages(setdiff(packages, rownames(installed.packages())))
   ## ------------ Run ----------- ##
   # open the data
-   if(RemoveBackgroundGenes=="TRUE"){
+  if(RemoveBackgroundGenes=="TRUE"){
     df <- read.csv(filename)
-    df <- subset(df, ! df[[BG_Method]] == FALSE)
+    df <- subset(df, ! df$BG_Method == "FALSE")
   } else{
     df <- read.csv(filename)
   }
