@@ -439,7 +439,13 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
   
   MergeDF_Rearrange <- merge(MergeDF_Select1, MergeDF_Select2, by="geneID")
   
-  write.csv(MergeDF_Rearrange, paste(OutputFileName, ".csv", sep=""), row.names = FALSE)
+  #Create Folder, Safe file and return to environment:
+  SiRCleRCM_results_folder = paste(getwd(), "/SiRCleRCM",  sep="")
+  if (!dir.exists(SiRCleRCM_results_folder)) {dir.create(SiRCleRCM_results_folder)}#
+  SiRCleRCM_MRP_results_folder = paste(SiRCleRCM_MRP_results_folder, "/SiRCleRCM_MRP_",Sys.Date(), sep="")
+  if (!dir.exists(SiRCleRCM_MRP_results_folder)) {dir.create(SiRCleRCM_MRP_results_folder)}  # check and create folder
+  
+  write.csv(MergeDF_Rearrange, paste("SiRCleRCM/SiRCleRCM_MRP_", Sys.Date(), "/", OutputFileName, ".csv", sep=""), row.names = FALSE)
   assign(OutputFileName, MergeDF_Rearrange, envir=.GlobalEnv)
   
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
@@ -466,7 +472,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
   ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3 , ClusterSummary_RG4)
   ClusterSummary <- ClusterSummary[,c(3,1,2)]
   
-  write.csv(ClusterSummary, paste("Summary_",OutputFileName, ".csv", sep=""), row.names = FALSE)
+  write.csv(ClusterSummary, paste("SiRCleRCM/SiRCleRCM_MRP_", Sys.Date(), "/", "Summary_",OutputFileName, ".csv", sep=""), row.names = FALSE)
   assign(paste("Summary_",OutputFileName, sep=""), ClusterSummary, envir=.GlobalEnv)
 }
 
@@ -696,7 +702,13 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
   
   MergeDF_Rearrange <- merge(MergeDF_Select1, MergeDF_Select2, by="geneID")
   
-  write.csv(MergeDF_Rearrange, paste(OutputFileName, ".csv", sep=""), row.names = FALSE)
+  #Create Folder, Safe file and return to environment:
+  SiRCleRCM_results_folder = paste(getwd(), "/SiRCleRCM",  sep="")
+  if (!dir.exists(SiRCleRCM_results_folder)) {dir.create(SiRCleRCM_results_folder)}#
+  SiRCleRCM_RP_results_folder = paste(SiRCleRCM_RP_results_folder, "/SiRCleRCM_RP_",Sys.Date(), sep="")
+  if (!dir.exists(SiRCleRCM_RP_results_folder)) {dir.create(SiRCleRCM_RP_results_folder)}  # check and create folder
+  
+  write.csv(MergeDF_Rearrange, paste("SiRCleRCM/SiRCleRCM_RP_", Sys.Date(), "/", OutputFileName, ".csv", sep=""), row.names = FALSE)
   assign(OutputFileName, MergeDF_Rearrange, envir=.GlobalEnv)
   
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
@@ -723,6 +735,6 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
   ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3 , ClusterSummary_RG4)
   ClusterSummary <- ClusterSummary[,c(3,1,2)]
   
-  write.csv(ClusterSummary, paste("Summary_",OutputFileName, ".csv", sep=""), row.names = FALSE)
+  write.csv(ClusterSummary, paste("SiRCleRCM/SiRCleRCM_RP_", Sys.Date(), "/", "Summary_",OutputFileName, ".csv", sep=""), row.names = FALSE)
   assign(paste("Summary_",OutputFileName, sep=""), ClusterSummary, envir=.GlobalEnv)
 }
