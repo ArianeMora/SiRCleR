@@ -162,6 +162,8 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
 #' @param maxGSSize \emph{Optional: } maximum group size in ORA \strong{default: 1000}
 #' @param Plot_p.adj \emph{Optional: } q value cutoff from ORA that should be plotted \strong{default: 0.2}
 #' @param Plot_Percentage \emph{Optional: } Percentage of genes that are detected of a pathway \strong{default: 10}
+#' @return
+#' @export
 
 sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="", enricher_geneID, enricher_Pathways, enricher_PathwayName="", fileType="pdf", minGSSize=10, maxGSSize=1000 , Plot_p.adj=0.2, Plot_Percentage=10, outputFolder=''){
   ## ------------ Setup and installs ----------- ##
