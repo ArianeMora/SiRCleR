@@ -235,16 +235,16 @@ sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyR
       if (!(dim(clusterGoSummary_Select)[1] == 0)) {#exclude df's that have no observations
         clusterGo@result <- clusterGoSummary_Select[,1:9]
         #1. Dotplot:
-        Dotplot <-  enrichplot::dotplot(clusterGo, showCategory=length(clusterGoSummary_Select)) +
+        Dotplot <-  enrichplot::dotplot(clusterGo, showCategory=nrow(clusterGoSummary_Select)) +
           ggtitle(paste("Dotplot ", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_Dotplot_Human_", g,"_" ,enricher_PathwayName, ".", fileType, sep=""), plot=Dotplot, width=10, height=8)
         #2. Emapplot
         x2 <- enrichplot::pairwise_termsim(clusterGo)
-        Emapplot <-  enrichplot::emapplot(x2, pie_scale=1.5, layout = "nicely")+
+        Emapplot <-  enrichplot::emapplot(x2, pie_scale=1.5, layout = "nicely", showCategory=nrow(clusterGoSummary_Select))+
           ggtitle(paste("Emapplot", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_Emapplot_Human_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=Emapplot, width=10, height=8)
         #4. Upsetplot:
-        UpsetPlot <-  enrichplot::upsetplot(clusterGo)+
+        UpsetPlot <-  enrichplot::upsetplot(clusterGo, showCategory=nrow(clusterGoSummary_Select))+
           ggtitle(paste("UpsetPlot", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_UpsetPlot_Human_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=UpsetPlot, width=10, height=8)
       }
