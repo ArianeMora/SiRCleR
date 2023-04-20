@@ -57,5 +57,8 @@ See the **vignettes** folder for a proper tutorial including data you can run th
 ## Questions & Issues
 Please post questions and issues related to **`SiRCleR`** functions on the `Issues`  section of this GitHub repository.
 
+## Reproducibility
+If you want to reproduce the results of of our [publication](https://doi.org/10.1101/2022.07.02.498058), please use the python package verison found here: https://doi.org/10.1101/2022.07.02.498058
+
 ## Citation
 Ariane Mora,  Christina Schmidt,  Brad Balderson, Christian Frezza & ProfileMikael Bodén 2022. SiRCle (Signature Regulatory Clustering) model integration reveals mechanisms of phenotype regulation in renal cancer. BioRxiv. https://doi.org/10.1101/2022.07.02.498058
