@@ -244,9 +244,9 @@ sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyR
           ggtitle(paste("Emapplot", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_Emapplot_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=Emapplot, width=10, height=8)
         #4. Upsetplot:
-        #UpsetPlot <-  enrichplot::upsetplot(clusterGo, showCategory=nrow(clusterGoSummary_Select))+
-         # ggtitle(paste("UpsetPlot", g, enricher_PathwayName, sep=" "))
-        #ggsave(file=paste(outputFolder, "SiRCle-ORA_UpsetPlot_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=UpsetPlot, width=10, height=8)
+        UpsetPlot <-  enrichplot::upsetplot(clusterGo, showCategory=nrow(clusterGoSummary_Select))+
+          ggtitle(paste("UpsetPlot", g, enricher_PathwayName, sep=" "))
+        ggsave(file=paste(outputFolder, "SiRCle-ORA_UpsetPlot_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=UpsetPlot, width=10, height=8)
       }
     }
   }
