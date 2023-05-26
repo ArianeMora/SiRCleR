@@ -175,7 +175,7 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
 #' @return
 #' @export
 
-sircleORA_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="", RemoveBackgroundGenes="TRUE", enricher_geneID, enricher_Pathways, enricher_PathwayName="", fileType="pdf", minGSSize=10, maxGSSize=1000 , Plot_p.adj=0.2, Plot_Percentage=10, outputFolder=''){
+sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="", RemoveBackgroundGenes="TRUE", enricher_geneID, enricher_Pathways, enricher_PathwayName="", fileType="pdf", minGSSize=10, maxGSSize=1000 , Plot_p.adj=0.2, Plot_Percentage=10, outputFolder=''){
   ## ------------ Setup and installs ----------- ##
   packages <- c("clusterProfiler", "enrichplot", "ggupset")
   install.packages(setdiff(packages, rownames(installed.packages())))
