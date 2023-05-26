@@ -46,15 +46,15 @@
 sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPadjCol="padj", methValueCol="Diff", methPadjCol="padj", proteinValueCol="Log2FC", proteinPadjCol="padj", rna_padj_cutoff= 0.05, prot_padj_cutoff = 0.05, meth_padj_cutoff = 0.05,rna_FC_cutoff= 1, prot_FC_cutoff = 0.5, meth_Diff_cutoff = 0.1, backgroundMethod, OutputFileName = "Sircle_RCM.csv"){
   #Import the data:
   proteinDF <- as.data.frame(protFile)%>%
-    rename("geneID"=paste(geneID),
+     dplyr::rename("geneID"=paste(geneID),
            "ValueCol"=paste(proteinValueCol),
            "PadjCol"=paste(proteinPadjCol))
   rnaDF<- as.data.frame(rnaFile)%>%
-    rename("geneID"=paste(geneID),
+     dplyr::rename("geneID"=paste(geneID),
            "ValueCol"=paste(rnaValueCol),
            "PadjCol"=paste(rnaPadjCol))
   methDF<- as.data.frame(methFile)%>%
-    rename("geneID"=paste(geneID),
+     dplyr::rename("geneID"=paste(geneID),
            "ValueCol"=paste(methValueCol),
            "PadjCol"=paste(methPadjCol))
   
@@ -109,15 +109,15 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
   ##Add prefix to column names to distinguish the different data types after merge
   colnames(proteinDF) <- paste0("proteinDF_", colnames(proteinDF))
   proteinDF <- proteinDF%>%
-    rename("geneID" = "proteinDF_geneID")
+     dplyr::rename("geneID" = "proteinDF_geneID")
   
   colnames(rnaDF) <- paste0("rnaDF_", colnames(rnaDF))
   rnaDF <- rnaDF%>%
-    rename("geneID"="rnaDF_geneID")
+     dplyr::rename("geneID"="rnaDF_geneID")
   
   colnames(methDF) <- paste0("methDF_", colnames(methDF))
   methDF <- methDF%>%
-    rename("geneID"="methDF_geneID")
+     dplyr::rename("geneID"="methDF_geneID")
   
   ##Merge
   MergeDF <- merge(methDF, rnaDF, by="geneID", all=TRUE)
@@ -430,7 +430,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
   methPadjCol_Unique <-paste("methDF_",methPadjCol)
   
   MergeDF_Select2<- subset(MergeDF, select=-c(methDF_Detected,methDF_Cutoff, rnaDF_Detected,rnaDF_Cutoff, proteinDF_Detected,proteinDF_Cutoff, proteinDF_Cutoff_Specific, BG_Method, RG1_All, RG2_Changes, RG3_Protein, RG4_Detection))%>%
-    rename(!!proteinValueCol_Unique :="proteinDF_ValueCol",#This syntax is needed since paste(geneID)="geneID" is not working in dyplr
+     dplyr::rename(!!proteinValueCol_Unique :="proteinDF_ValueCol",#This syntax is needed since paste(geneID)="geneID" is not working in dyplr
            !!proteinPadjCol_Unique :="proteinDF_PadjCol",
            !!rnaValueCol_Unique :="rnaDF_ValueCol",
            !!rnaPadjCol_Unique :="rnaDF_PadjCol",
@@ -451,22 +451,22 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
   ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
     count(RG1_All, name="Number of Genes")%>%
-    rename("SiRCle cluster Name"= "RG1_All")
+     dplyr::rename("SiRCle cluster Name"= "RG1_All")
   ClusterSummary_RG1$`Regulation Grouping` <- "RG1_All"
   
   ClusterSummary_RG2 <- MergeDF_Rearrange[,c("geneID", "RG2_Changes")]%>%
     count(RG2_Changes, name="Number of Genes")%>%
-    rename("SiRCle cluster Name"= "RG2_Changes")
+     dplyr::rename("SiRCle cluster Name"= "RG2_Changes")
   ClusterSummary_RG2$`Regulation Grouping` <- "RG2_Changes"
   
   ClusterSummary_RG3 <- MergeDF_Rearrange[,c("geneID", "RG3_Protein")]%>%
     count(RG3_Protein, name="Number of Genes")%>%
-    rename("SiRCle cluster Name"= "RG3_Protein")
+     dplyr::rename("SiRCle cluster Name"= "RG3_Protein")
   ClusterSummary_RG3$`Regulation Grouping` <- "RG3_Protein"
   
   ClusterSummary_RG4 <- MergeDF_Rearrange[,c("geneID","RG4_Detection")]%>%
     count(RG4_Detection, name="Number of Genes")%>%
-    rename("SiRCle cluster Name"= "RG4_Detection")
+     dplyr::rename("SiRCle cluster Name"= "RG4_Detection")
   ClusterSummary_RG4$`Regulation Grouping` <- "RG4_Detection"
   
   ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3 , ClusterSummary_RG4)
@@ -504,7 +504,7 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
                   "ValueCol"=paste(proteinValueCol),
                   "PadjCol"=paste(proteinPadjCol))
   rnaDF<- as.data.frame(rnaFile)%>%
-    rename("geneID"=paste(geneID),
+     dplyr::rename("geneID"=paste(geneID),
            "ValueCol"=paste(rnaValueCol),
            "PadjCol"=paste(rnaPadjCol))
   
@@ -547,11 +547,11 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
   ##Add prefix to column names to distinguish the different data types after merge
   colnames(proteinDF) <- paste0("proteinDF_", colnames(proteinDF))
   proteinDF <- proteinDF%>%
-    rename("geneID" = "proteinDF_geneID")
+     dplyr::rename("geneID" = "proteinDF_geneID")
   
   colnames(rnaDF) <- paste0("rnaDF_", colnames(rnaDF))
   rnaDF <- rnaDF%>%
-    rename("geneID"="rnaDF_geneID")
+     dplyr::rename("geneID"="rnaDF_geneID")
   
   ##Merge
   MergeDF <- merge(rnaDF, proteinDF, by="geneID", all=TRUE)
@@ -695,7 +695,7 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
   rnaPadjCol_Unique <-paste("rnaDF_",rnaPadjCol)
   
   MergeDF_Select2<- subset(MergeDF, select=-c(rnaDF_Detected,rnaDF_Cutoff, proteinDF_Detected,proteinDF_Cutoff, proteinDF_Cutoff_Specific, BG_Method, RG1_All, RG2_Changes, RG3_Protein, RG4_Detection))%>%
-    rename(!!proteinValueCol_Unique :="proteinDF_ValueCol",#This syntax is needed since paste(geneID)="geneID" is not working in dyplr
+     dplyr::rename(!!proteinValueCol_Unique :="proteinDF_ValueCol",#This syntax is needed since paste(geneID)="geneID" is not working in dyplr
            !!proteinPadjCol_Unique :="proteinDF_PadjCol",
            !!rnaValueCol_Unique :="rnaDF_ValueCol",
            !!rnaPadjCol_Unique :="rnaDF_PadjCol")
@@ -714,22 +714,22 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
   ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
     count(RG1_All, name="Number of Genes")%>%
-    rename("SiRCle cluster Name"= "RG1_All")
+     dplyr::rename("SiRCle cluster Name"= "RG1_All")
   ClusterSummary_RG1$`Regulation Grouping` <- "RG1_All"
   
   ClusterSummary_RG2 <- MergeDF_Rearrange[,c("geneID", "RG2_Changes")]%>%
     count(RG2_Changes, name="Number of Genes")%>%
-    rename("SiRCle cluster Name"= "RG2_Changes")
+     dplyr::rename("SiRCle cluster Name"= "RG2_Changes")
   ClusterSummary_RG2$`Regulation Grouping` <- "RG2_Changes"
   
   ClusterSummary_RG3 <- MergeDF_Rearrange[,c("geneID", "RG3_Protein")]%>%
     count(RG3_Protein, name="Number of Genes")%>%
-    rename("SiRCle cluster Name"= "RG3_Protein")
+     dplyr::rename("SiRCle cluster Name"= "RG3_Protein")
   ClusterSummary_RG3$`Regulation Grouping` <- "RG3_Protein"
   
   ClusterSummary_RG4 <- MergeDF_Rearrange[,c("geneID","RG4_Detection")]%>%
     count(RG4_Detection, name="Number of Genes")%>%
-    rename("SiRCle cluster Name"= "RG4_Detection")
+     dplyr::rename("SiRCle cluster Name"= "RG4_Detection")
   ClusterSummary_RG4$`Regulation Grouping` <- "RG4_Detection"
   
   ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3 , ClusterSummary_RG4)
@@ -764,11 +764,11 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
 sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC",Cond1PadjCol="padj", Cond2ValueCol="Log2FC", Cond2PadjCol="padj",Cond1_padj_cutoff= 0.05, Cond2_padj_cutoff = 0.05,Cond1_FC_cutoff= 1, Cond2_FC_cutoff = 0.5, backgroundMethod="C1&C2", OutputFileName = "Sircle_RCM.csv"){
   #Import the data:
   Cond2_DF <- as.data.frame(Cond2_File)%>%
-    rename("geneID"=paste(geneID),
+     dplyr::rename("geneID"=paste(geneID),
                   "ValueCol"=paste(Cond2ValueCol),
                   "PadjCol"=paste(Cond2PadjCol))
   Cond1_DF<- as.data.frame(Cond1_File)%>%
-    rename("geneID"=paste(geneID),
+     dplyr::rename("geneID"=paste(geneID),
            "ValueCol"=paste(Cond1ValueCol),
            "PadjCol"=paste(Cond1PadjCol))
   
@@ -817,11 +817,11 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
   ##Add prefix to column names to distinguish the different data types after merge
   colnames(Cond2_DF) <- paste0("Cond2_DF_", colnames(Cond2_DF))
   Cond2_DF <- Cond2_DF%>%
-    rename("geneID" = "Cond2_DF_geneID")
+     dplyr::rename("geneID" = "Cond2_DF_geneID")
   
   colnames(Cond1_DF) <- paste0("Cond1_DF_", colnames(Cond1_DF))
   Cond1_DF <-Cond1_DF%>%
-    rename("geneID"="Cond1_DF_geneID")
+     dplyr::rename("geneID"="Cond1_DF_geneID")
   
   ##Merge
   MergeDF <- merge(Cond1_DF, Cond2_DF, by="geneID", all=TRUE)
@@ -1045,7 +1045,7 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
   Cond1PadjCol_Unique <-paste("Cond1_DF_",Cond1PadjCol)
   
   MergeDF_Select2<- subset(MergeDF, select=-c(Cond1_DF_Detected,Cond1_DF_Cutoff, Cond2_DF_Detected,Cond2_DF_Cutoff, Cond2_DF_Cutoff_Specific, BG_Method, RG1_All, RG2_Significant, RG3_SignificantChange))%>%
-    rename(!!Cond2ValueCol_Unique :="Cond2_DF_ValueCol",#This syntax is needed since paste(geneID)="geneID" is not working in dyplr
+     dplyr::rename(!!Cond2ValueCol_Unique :="Cond2_DF_ValueCol",#This syntax is needed since paste(geneID)="geneID" is not working in dyplr
            !!Cond2PadjCol_Unique :="Cond2_DF_PadjCol",
            !!Cond1ValueCol_Unique :="Cond1_DF_ValueCol",
            !!Cond1PadjCol_Unique :="Cond1_DF_PadjCol")
@@ -1057,17 +1057,17 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
   ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
     count(RG1_All, name="Number of Genes")%>%
-    rename("SiRCle cluster Name"= "RG1_All")
+     dplyr::rename("SiRCle cluster Name"= "RG1_All")
   ClusterSummary_RG1$`Regulation Grouping` <- "RG1_All"
   
   ClusterSummary_RG2 <- MergeDF_Rearrange[,c("geneID", "RG2_Significant")]%>%
     count(RG2_Significant, name="Number of Genes")%>%
-    rename("SiRCle cluster Name"= "RG2_Significant")
+     dplyr::rename("SiRCle cluster Name"= "RG2_Significant")
   ClusterSummary_RG2$`Regulation Grouping` <- "RG2_Significant"
   
   ClusterSummary_RG3 <- MergeDF_Rearrange[,c("geneID", "RG3_SignificantChange")]%>%
     count(RG3_SignificantChange, name="Number of Genes")%>%
-    rename("SiRCle cluster Name"= "RG3_SignificantChange")
+     dplyr::rename("SiRCle cluster Name"= "RG3_SignificantChange")
   ClusterSummary_RG3$`Regulation Grouping` <- "RG3_SignificantChange"
   
   ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3)
