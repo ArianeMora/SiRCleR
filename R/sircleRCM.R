@@ -738,3 +738,344 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
   write.csv(ClusterSummary, paste("SiRCleRCM/SiRCleRCM_RP_", Sys.Date(), "/", "Summary_",OutputFileName, ".csv", sep=""), row.names = FALSE)
   assign(paste("Summary_",OutputFileName, sep=""), ClusterSummary, envir=.GlobalEnv)
 }
+
+
+
+#' sircleRCM_2Cond
+#'
+#' Computes the regulatory clustering model (RCM) using the SiRCle regulatory rules between two conditions of the same data type.
+#'
+#' @param Cond1File Filename for your data (results from e.g. DeSeq2)
+#' @param Cond2File Filename for your data (results from e.g. DeSeq2)
+#' @param geneID Column name of geneId this MUST BE THE SAME in each of your Input files (we join on this)
+#' @param Cond1ValueCol Column name of log fold change in Cond1File 
+#' @param Cond1PadjCol Column name of p adjusted value in Cond1File 
+#' @param Cond2ValueCol  Column name of log fold change in Cond2File
+#' @param Cond2PadjCol Column name of protein p adjusted value in Cond2File
+#' @param Cond1PadjCutoff  \emph{Optional: }Padjusted cutoff forCond1 data \strong{Default=0.05}
+#' @param Cond1LogFCCutoff \emph{Optional: } LogFoldchange cutoff for Cond1 data \strong{Default=0.5}
+#' @param Cond2FilePadjCutoff \emph{Optional: } Padjusted cutoff for Cond2File data \strong{Default=0.05}
+#' @param Cond2FileCutoff \emph{Optional: } LogFoldchange cutoff for Cond2File data \strong{Default=0.5}
+#' @param backgroundMethod \emph{Optional: } Background method C1|C2, C1&C2, C2, C1 or * \strong{Default="C1&C2"}
+#' @param outputFileName \emph{Optional: } Output filename \strong{Default=SiRCle_RCM.csv}
+#' @return rcm an instance of the rcm package
+#' @export
+#'
+sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC",Cond1PadjCol="padj", Cond2ValueCol="Log2FC", Cond2PadjCol="padj",Cond1_padj_cutoff= 0.05, Cond2_padj_cutoff = 0.05,Cond1_FC_cutoff= 1, Cond2_FC_cutoff = 0.5, backgroundMethod="C1&C2", OutputFileName = "Sircle_RCM.csv"){
+  #Import the data:
+  Cond2_DF <- as.data.frame(Cond2_File)%>%
+    rename("geneID"=paste(geneID),
+                  "ValueCol"=paste(Cond2ValueCol),
+                  "PadjCol"=paste(Cond2PadjCol))
+  Cond1_DF<- as.data.frame(Cond1_File)%>%
+    rename("geneID"=paste(geneID),
+           "ValueCol"=paste(Cond1ValueCol),
+           "PadjCol"=paste(Cond1PadjCol))
+  
+  #First check for duplicates in "geneID" and drop if there are any
+  if(length(Cond2_DF[duplicated(Cond2_DF$geneID), "geneID"]) > 0){
+    doublons <- as.character(Cond2_DF[duplicated(Cond2_DF$geneID), "geneID"])#number of duplications
+    Cond2_DF <-Cond2_DF[!duplicated(Cond2_DF$geneID),]#remove duplications
+    warning("Cond2 dataset contained duplicates based on geneID! Dropping duplicate IDs and kept only the first entry. You had ", length(doublons), " duplicates.")
+    warning("Note that you should do this before running SiRCle.")
+  }
+  if(length(Cond1_DF[duplicated(Cond1_DF$geneID), "geneID"]) > 0){
+    doublons <- as.character(Cond1_DF[duplicated(Cond1_DF$geneID), "geneID"])#number of duplications
+   Cond1_DF <-Cond1_DF[!duplicated(Cond1_DF$geneID),]#remove duplications
+    warning("Cond1 dataset contained duplicates based on geneID! Dropping duplicate IDs and kept only the first entry. You had ", length(doublons), " duplicates.")
+    warning("Note that you should do this before running SiRCle.")
+  }
+  
+  #Tag genes that are detected in each data layer
+  Cond2_DF$Detected <- "TRUE"
+  Cond1_DF$Detected <- "TRUE"
+  
+  #Assign to Group based on individual Cutoff ("UP", "DOWN", "No Change")
+  Cond2_DF <- Cond2_DF%>%
+    mutate(Cutoff = case_when(Cond2_DF$PadjCol < Cond2_padj_cutoff & Cond2_DF$ValueCol > Cond2_FC_cutoff ~ 'UP',
+                              Cond2_DF$PadjCol < Cond2_padj_cutoff & Cond2_DF$ValueCol < -Cond2_FC_cutoff ~ 'DOWN',
+                              TRUE ~ 'No Change')) %>%
+    mutate(Cutoff_Specific = case_when(Cutoff == "UP" ~ 'UP',
+                                       Cutoff == "DOWN" ~ 'DOWN',
+                                       Cutoff == "No Change" & Cond2_DF$PadjCol < Cond2_padj_cutoff & Cond2_DF$ValueCol > 0 ~ 'Significant Positive',
+                                       Cutoff == "No Change" & Cond2_DF$PadjCol < Cond2_padj_cutoff & Cond2_DF$ValueCol < 0 ~ 'Significant Negative',
+                                       Cutoff == "No Change" & Cond2_DF$PadjCol > Cond2_padj_cutoff ~ 'Not Significant',
+                                       TRUE ~ 'FALSE'))
+  
+  Cond1_DF <-Cond1_DF%>%
+    mutate(Cutoff = case_when(Cond1_DF$PadjCol <Cond1_padj_cutoff &Cond1_DF$ValueCol >Cond1_FC_cutoff ~ 'UP',
+                             Cond1_DF$PadjCol <Cond1_padj_cutoff &Cond1_DF$ValueCol < -Cond1_FC_cutoff ~ 'DOWN',
+                              TRUE ~ 'No Change'))%>%
+    mutate(Cutoff_Specific = case_when(Cutoff == "UP" ~ 'UP',
+                                       Cutoff == "DOWN" ~ 'DOWN',
+                                       Cutoff == "No Change" & Cond1_DF$PadjCol < Cond1_padj_cutoff & Cond1_DF$ValueCol > 0 ~ 'Significant Positive',
+                                       Cutoff == "No Change" & Cond1_DF$PadjCol < Cond1_padj_cutoff & Cond1_DF$ValueCol < 0 ~ 'Significant Negative',
+                                       Cutoff == "No Change" & Cond1_DF$PadjCol > Cond1_padj_cutoff ~ 'Not Significant',
+                                       TRUE ~ 'FALSE'))
+  
+  #Merge the dataframes together: Merge the suppliedCond1seq and Cond2eomics dataframes together. 
+  ##Add prefix to column names to distinguish the different data types after merge
+  colnames(Cond2_DF) <- paste0("Cond2_DF_", colnames(Cond2_DF))
+  Cond2_DF <- Cond2_DF%>%
+    rename("geneID" = "Cond2_DF_geneID")
+  
+  colnames(Cond1_DF) <- paste0("Cond1_DF_", colnames(Cond1_DF))
+  Cond1_DF <-Cond1_DF%>%
+    rename("geneID"="Cond1_DF_geneID")
+  
+  ##Merge
+  MergeDF <- merge(Cond1_DF, Cond2_DF, by="geneID", all=TRUE)
+  
+  ##Mark the undetected genes in each data layer
+  MergeDF<-MergeDF %>% 
+    mutate_at(c("Cond2_DF_Detected","Cond1_DF_Detected"), ~replace_na(.,"FALSE"))%>% 
+    mutate_at(c("Cond2_DF_Cutoff","Cond1_DF_Cutoff"), ~replace_na(.,"No Change"))%>%
+    mutate_at(c("Cond2_DF_Cutoff_Specific", "Cond1_DF_Cutoff_Specific"), ~replace_na(.,"Not Detected"))
+  
+  #Apply Background filter (label genes that will be removed based on choosen background)
+  if(backgroundMethod == "C1|C2"){# C1|C2 = Cond2 OR Cond1
+    MergeDF <- MergeDF%>%
+      mutate(BG_Method = case_when(Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', #Cond1 & Cond2
+                                  Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="FALSE" ~ 'TRUE', # JustCond1
+                                  Cond1_DF_Detected=="FALSE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', # Just Cond2
+                                   TRUE ~ 'FALSE'))
+  }else if(backgroundMethod == "C1&C2"){ # Cond2 AND Cond1
+    MergeDF <- MergeDF%>%
+      mutate(BG_Method = case_when(Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', #Cond1 & Cond2
+                                   TRUE ~ 'FALSE'))
+  }else if(backgroundMethod == "C2"){ # Cond2 has to be there
+    MergeDF <- MergeDF%>%
+      mutate(BG_Method = case_when(Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', #Cond1 & Cond2
+                                  Cond1_DF_Detected=="FALSE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', # Just Cond2
+                                   TRUE ~ 'FALSE'))
+  }else if(backgroundMethod == "C1"){ #Cond1 has to be there
+    MergeDF <- MergeDF%>%
+      mutate(BG_Method = case_when(Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', #Cond1 & Cond2
+                                  Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="FALSE" ~ 'TRUE', # JustCond1
+                                   TRUE ~ 'FALSE'))
+  }else if(backgroundMethod == "*"){ # Use all genes as the background
+    MergeDF$BG_Method <- "TRUE"
+  }else{
+   stop("Please use one of the following backgroundMethods: C1|C2, C1&C2, C2, C1, *")#error message
+  }
+  
+  #Assign SiRCle cluster names to the genes
+  MergeDF <- MergeDF%>%
+    mutate(RG1_Specific_Cond2 = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+                              Cond1_DF_Cutoff=="DOWN" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 DOWN + Cond2 DOWN',#State 1
+                              Cond1_DF_Cutoff=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 DOWN + Cond2 Not Detected',#State 2
+                              Cond1_DF_Cutoff=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 DOWN + Cond2 Not Significant',#State 3
+                              Cond1_DF_Cutoff=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 DOWN + Cond2 Significant Negative',#State 4
+                              Cond1_DF_Cutoff=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 DOWN + Cond2 Significant Positive',#State 5
+                              Cond1_DF_Cutoff=="DOWN" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 DOWN + Cond2 UP',#State 6
+                               
+                              Cond1_DF_Cutoff=="No Change" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 No Change + Cond2 DOWN',#State 7
+                              Cond1_DF_Cutoff=="No Change" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 No Change + Cond2 Not Detected',#State 8
+                              Cond1_DF_Cutoff=="No Change" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 No Change + Cond2 Not Significant',#State 9
+                              Cond1_DF_Cutoff=="No Change" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 No Change + Cond2 Significant Negative',#State 10
+                              Cond1_DF_Cutoff=="No Change" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 No Change + Cond2 Significant Positive',#State 11
+                              Cond1_DF_Cutoff=="No Change" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 No Change + Cond2 UP',#State 6
+                               
+                              Cond1_DF_Cutoff=="UP" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 UP + Cond2 DOWN',#State 12
+                              Cond1_DF_Cutoff=="UP" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 UP + Cond2 Not Detected',#State 13
+                              Cond1_DF_Cutoff=="UP" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 UP + Cond2 Not Significant',#State 14
+                              Cond1_DF_Cutoff=="UP" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 UP + Cond2 Significant Negative',#State 15
+                              Cond1_DF_Cutoff=="UP" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 UP + Cond2 Significant Positive',#State 16
+                              Cond1_DF_Cutoff=="UP" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 UP + Cond2 UP',#State 17
+                               TRUE ~ 'NA'))%>%
+    mutate(RG1_Specific_Cond1 = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+                              Cond2_DF_Cutoff=="DOWN" & Cond1_DF_Cutoff_Specific=="DOWN" ~ 'Cond2 DOWN + Cond1 DOWN',#State 1
+                              Cond2_DF_Cutoff=="DOWN" & Cond1_DF_Cutoff_Specific=="Not Detected" ~ 'Cond2 DOWN + Cond1 Not Detected',#State 2
+                              Cond2_DF_Cutoff=="DOWN" & Cond1_DF_Cutoff_Specific=="Not Significant" ~ 'Cond2 DOWN + Cond1 Not Significant',#State 3
+                              Cond2_DF_Cutoff=="DOWN" & Cond1_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond2 DOWN + Cond1 Significant Negative',#State 4
+                              Cond2_DF_Cutoff=="DOWN" & Cond1_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond2 DOWN + Cond1 Significant Positive',#State 5
+                              Cond2_DF_Cutoff=="DOWN" & Cond1_DF_Cutoff_Specific=="UP" ~ 'Cond2 DOWN + Cond1 UP',#State 6
+                               
+                              Cond2_DF_Cutoff=="No Change" & Cond1_DF_Cutoff_Specific=="DOWN" ~ 'Cond2 No Change + Cond1 DOWN',#State 7
+                              Cond2_DF_Cutoff=="No Change" & Cond1_DF_Cutoff_Specific=="Not Detected" ~ 'Cond2 No Change + Cond1 Not Detected',#State 8
+                              Cond2_DF_Cutoff=="No Change" & Cond1_DF_Cutoff_Specific=="Not Significant" ~ 'Cond2 No Change + Cond1 Not Significant',#State 9
+                              Cond2_DF_Cutoff=="No Change" & Cond1_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond2 No Change + Cond1 Significant Negative',#State 10
+                              Cond2_DF_Cutoff=="No Change" & Cond1_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond2 No Change + Cond1 Significant Positive',#State 11
+                              Cond2_DF_Cutoff=="No Change" & Cond1_DF_Cutoff_Specific=="UP" ~ 'Cond2 No Change + Cond1 UP',#State 6
+                               
+                              Cond2_DF_Cutoff=="UP" & Cond1_DF_Cutoff_Specific=="DOWN" ~ 'Cond2 UP + Cond1 DOWN',#State 12
+                              Cond2_DF_Cutoff=="UP" & Cond1_DF_Cutoff_Specific=="Not Detected" ~ 'Cond2 UP + Cond1 Not Detected',#State 13
+                              Cond2_DF_Cutoff=="UP" & Cond1_DF_Cutoff_Specific=="Not Significant" ~ 'Cond2 UP + Cond1 Not Significant',#State 14
+                              Cond2_DF_Cutoff=="UP" & Cond1_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond2 UP + Cond1 Significant Negative',#State 15
+                              Cond2_DF_Cutoff=="UP" & Cond1_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond2 UP + Cond1 Significant Positive',#State 16
+                              Cond2_DF_Cutoff=="UP" & Cond1_DF_Cutoff_Specific=="UP" ~ 'Cond2 UP + Cond1 UP',#State 17
+                               TRUE ~ 'NA'))%>%
+    mutate(RG1_All = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 DOWN + Cond2 DOWN',#State 1
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 DOWN + Cond2 Not Detected',#State 2
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 DOWN + Cond2 Not Significant',#State 3
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 DOWN + Cond2 Significant Negative',#State 4
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 DOWN + Cond2 Significant Positive',#State 5
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 DOWN + Cond2 UP',#State 6
+                                
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 UP + Cond2 DOWN',#State 12
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 UP + Cond2 Not Detected',#State 13
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 UP + Cond2 Not Significant',#State 14
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 UP + Cond2 Significant Negative',#State 15
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 UP + Cond2 Significant Positive',#State 16
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 UP + Cond2 UP',#State 17
+                              
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 Not Detected + Cond2 DOWN',#State 12
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 Not Detected + Cond2 Not Detected',#State 13
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 Not Detected + Cond2 Not Significant',#State 14
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 Not Detected + Cond2 Significant Negative',#State 15
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 Not Detected + Cond2 Significant Positive',#State 16
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 Not Detected + Cond2 UP',#State 17
+                             
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 Significant Negative + Cond2 DOWN',#State 12
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 Significant Negative + Cond2 Not Detected',#State 13
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 Significant Negative + Cond2 Not Significant',#State 14
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 Significant Negative + Cond2 Significant Negative',#State 15
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 Significant Negative + Cond2 Significant Positive',#State 16
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 Significant Negative + Cond2 UP',#State 17
+                             
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 Significant Positive + Cond2 DOWN',#State 12
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 Significant Positive + Cond2 Not Detected',#State 13
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 Significant Positive + Cond2 Not Significant',#State 14
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 Significant Positive + Cond2 Significant Negative',#State 15
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 Significant Positive + Cond2 Significant Positive',#State 16
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 Significant Positive + Cond2 UP',#State 17
+                              
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 Not Significant + Cond2 DOWN',#State 12
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 Not Significant + Cond2 Not Detected',#State 13
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 Not Significant + Cond2 Not Significant',#State 14
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 Not Significant + Cond2 Significant Negative',#State 15
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 Not Significant + Cond2 Significant Positive',#State 16
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 Not Significant + Cond2 UP',#State 1
+                               TRUE ~ 'NA'))%>%
+    mutate(RG2_Significant = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Core_DOWN',#State 1
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1_DOWN',#State 2
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1_DOWN',#State 3
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Core_DOWN',#State 4
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Opposite',#State 5
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Opposite',#State 6
+                                  
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Opposite',#State 12
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1_UP',#State 13
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1_UP',#State 14
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Opposite',#State 15
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Core_UP',#State 16
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Core_UP',#State 17
+                              
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond2_DOWN',#State 12
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond2_UP',#State 17
+                             
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Core_DOWN',#State 12
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Opposite',#State 17
+                             
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Opposite',#State 12
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Core_UP',#State 17
+                              
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond2_DOWN',#State 12
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1_UP',#State 1
+                               TRUE ~ 'NA'))%>%
+    mutate(RG3_SignificantChange = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Core_DOWN',#State 1
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1_DOWN',#State 2
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1_DOWN',#State 3
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1_DOWN',#State 4
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1_DOWN',#State 5
+                              Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Opposite',#State 6
+                                  
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Opposite',#State 12
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1_UP',#State 13
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1_UP',#State 14
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1_UP',#State 15
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1_UP',#State 16
+                              Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Core_UP',#State 17
+                              
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond2_DOWN',#State 12
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
+                              Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond2_UP',#State 17
+                             
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond2_DOWN',#State 12
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
+                              Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond2_UP',#State 17
+                             
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond2_DOWN',#State 12
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
+                              Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond2_UP',#State 17
+                              
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond2_DOWN',#State 12
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
+                              Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1_UP',#State 1
+                               TRUE ~ 'NA'))
+   
+  #Safe the DF and return the groupings
+  ##RCM DF (Merged InputDF filtered for background with assigned SiRcle cluster names)
+  MergeDF_Select1 <- MergeDF[, c("geneID", "Cond1_DF_Detected","Cond1_DF_ValueCol","Cond1_DF_PadjCol","Cond1_DF_Cutoff", "Cond1_DF_Cutoff_Specific", "Cond2_DF_Detected", "Cond2_DF_ValueCol","Cond2_DF_PadjCol","Cond2_DF_Cutoff", "Cond2_DF_Cutoff_Specific", "BG_Method", "RG1_All", "RG2_Significant", "RG3_SignificantChange")]
+  
+  Cond2ValueCol_Unique<-paste("Cond2_DF_",Cond2ValueCol)
+  Cond2PadjCol_Unique <-paste("Cond2_DF_",Cond2PadjCol)
+  Cond1ValueCol_Unique<-paste("Cond1_DF_",Cond1ValueCol)
+  Cond1PadjCol_Unique <-paste("Cond1_DF_",Cond1PadjCol)
+  
+  MergeDF_Select2<- subset(MergeDF, select=-c(Cond1_DF_Detected,Cond1_DF_Cutoff, Cond2_DF_Detected,Cond2_DF_Cutoff, Cond2_DF_Cutoff_Specific, BG_Method, RG1_All, RG2_Significant, RG3_SignificantChange))%>%
+    rename(!!Cond2ValueCol_Unique :="Cond2_DF_ValueCol",#This syntax is needed since paste(geneID)="geneID" is not working in dyplr
+           !!Cond2PadjCol_Unique :="Cond2_DF_PadjCol",
+           !!Cond1ValueCol_Unique :="Cond1_DF_ValueCol",
+           !!Cond1PadjCol_Unique :="Cond1_DF_PadjCol")
+  
+  MergeDF_Rearrange <- merge(MergeDF_Select1, MergeDF_Select2, by="geneID")
+  
+  write.csv(MergeDF_Rearrange, OutputFileName, row.names = FALSE)
+  
+  ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
+  ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
+    count(RG1_All, name="Number of Genes")%>%
+    rename("SiRCle cluster Name"= "RG1_All")
+  ClusterSummary_RG1$`Regulation Grouping` <- "RG1_All"
+  
+  ClusterSummary_RG2 <- MergeDF_Rearrange[,c("geneID", "RG2_Significant")]%>%
+    count(RG2_Significant, name="Number of Genes")%>%
+    rename("SiRCle cluster Name"= "RG2_Significant")
+  ClusterSummary_RG2$`Regulation Grouping` <- "RG2_Significant"
+  
+  ClusterSummary_RG3 <- MergeDF_Rearrange[,c("geneID", "RG3_SignificantChange")]%>%
+    count(RG3_SignificantChange, name="Number of Genes")%>%
+    rename("SiRCle cluster Name"= "RG3_SignificantChange")
+  ClusterSummary_RG3$`Regulation Grouping` <- "RG3_SignificantChange"
+  
+  ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3)
+  ClusterSummary <- ClusterSummary[,c(3,1,2)]
+  
+  write.csv(ClusterSummary, paste("Summary_",OutputFileName), row.names = FALSE)
+  
+  return(MergeDF_Rearrange)
+}
+
+
