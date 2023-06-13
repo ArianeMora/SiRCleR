@@ -117,7 +117,7 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
 
   # open the data
     df <- read.csv(filename)
-  
+
   allGenes <- as.character(df[[entrezId]])# I had to add as.character
   clusterGenes <- subset(df, ! df[[regLabels]] == emptyRegLabel)
   #oraDir <- "ora_figs" #This did not work for me, and I just had to make the folder myself before running the code
@@ -175,7 +175,7 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
 #' @return
 #' @export
 
-sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="", RemoveBackgroundGenes="TRUE", enricher_geneID, enricher_Pathways, enricher_PathwayName="", fileType="pdf", minGSSize=10, maxGSSize=1000 , Plot_p.adj=0.2, Plot_Percentage=10, outputFolder=''){
+sircleORA_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="", RemoveBackgroundGenes="TRUE", enricher_geneID, enricher_Pathways, enricher_PathwayName="", fileType="pdf", minGSSize=10, maxGSSize=1000 , Plot_p.adj=0.2, Plot_Percentage=10, outputFolder=''){
   ## ------------ Setup and installs ----------- ##
   packages <- c("clusterProfiler", "enrichplot", "ggupset")
   install.packages(setdiff(packages, rownames(installed.packages())))
@@ -187,7 +187,7 @@ sircleORAHuman_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyR
   } else{
     df <- read.csv(filename)
   }
-  
+
   #Select universe and SiRCle clusters
   allGenes <- as.character(df[[enricher_geneID]]) #
   clusterGenes <- subset(df, ! df[[regLabels]] == emptyRegLabel)
