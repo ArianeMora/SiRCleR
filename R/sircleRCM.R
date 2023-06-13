@@ -1052,7 +1052,7 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
   
   MergeDF_Rearrange <- merge(MergeDF_Select1, MergeDF_Select2, by="geneID")
   
-  write.csv(MergeDF_Rearrange, OutputFileName, row.names = FALSE)
+  write.csv(MergeDF_Rearrange, paste(OutputFileName , ".csv", sep=""), row.names = FALSE)
   
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
   ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
@@ -1073,7 +1073,7 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
   ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3)
   ClusterSummary <- ClusterSummary[,c(3,1,2)]
   
-  write.csv(ClusterSummary, paste("Summary_",OutputFileName), row.names = FALSE)
+  write.csv(ClusterSummary, paste(OutputFileName, "_Summary.csv", sep=""), row.names = FALSE)
   
   return(MergeDF_Rearrange)
 }
