@@ -248,7 +248,7 @@ sircleORA_TF <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="
       write_csv(clusterGoSummary, paste(outputFolder, 'ClusterGoSummary_', enricher_PathwayName, '-', g, '.csv', sep=""))#Export the ORA results as .csv
       #Make Selection of terms that should be displayed on the plots
       clusterGoSummary_Select <- clusterGoSummary %>%
-        subset(p.adjust <= Plot_p.adj & Percentage_of_Pathway_detected >= Plot_Percentage)
+        subset(p.adjust <= Plot_p.adj & Percentage_of_TFtargets_detected >= Plot_Percentage)
       rownames(clusterGoSummary_Select)<-clusterGoSummary_Select$ID
       #Make the Plots
       if (!(dim(clusterGoSummary_Select)[1] == 0)) {#exclude df's that have no observations
