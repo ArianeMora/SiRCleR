@@ -241,7 +241,7 @@ sircleORA_TF <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="
       clusterGoSummary <- merge(x= clusterGoSummary[,-2], y=Pathway[,-2],by.x="TF",by.y="term", all=TRUE)
       clusterGoSummary$Count[is.na(clusterGoSummary$Count)] <- 0
       clusterGoSummary$Percentage_of_TFtargets_detected <-round(((clusterGoSummary$Count/clusterGoSummary$TF_targets)*100),digits=2)
-      clusterGoSummary <- clusterGoSummary[!duplicated(clusterGoSummary$ID),]
+      clusterGoSummary <- clusterGoSummary[!duplicated(clusterGoSummary$TF),]
       clusterGoSummary <- clusterGoSummary[order(clusterGoSummary$p.adjust),]
       clusterGoSummary <- clusterGoSummary[,c(1,9,2:8, 10:11)]
       #Safe file
@@ -249,7 +249,10 @@ sircleORA_TF <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="
       #Make Selection of terms that should be displayed on the plots
       clusterGoSummary_Select <- clusterGoSummary %>%
         subset(p.adjust <= Plot_p.adj & Percentage_of_TFtargets_detected >= Plot_Percentage)
-      rownames(clusterGoSummary_Select)<-clusterGoSummary_Select$ID
+      rownames(clusterGoSummary_Select)<-clusterGoSummary_Select$TF
+      clusterGoSummary_Select <-clusterGoSummary_Select%>%
+        dplyr::rename("ID"="TF",
+                    "geneID"="DetectedTargets")
       #Make the Plots
       if (!(dim(clusterGoSummary_Select)[1] == 0)) {#exclude df's that have no observations
         clusterGo@result <- clusterGoSummary_Select[,1:9]
