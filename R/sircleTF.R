@@ -253,9 +253,11 @@ sircleORA_TF <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="
       clusterGoSummary_Select <-clusterGoSummary_Select%>%
         dplyr::rename("ID"="TF",
                     "geneID"="DetectedTargets")
+      clusterGoSummary_Select$Description <- clusterGoSummary_Select$ID
+      clusterGoSummary_Select<-clusterGoSummary_Select[,c(1,12,2:9)]
       #Make the Plots
       if (!(dim(clusterGoSummary_Select)[1] == 0)) {#exclude df's that have no observations
-        clusterGo@result <- clusterGoSummary_Select[,1:9]
+        clusterGo@result <- clusterGoSummary_Select
         #1. Dotplot:
         Dotplot <-  enrichplot::dotplot(clusterGo, showCategory=nrow(clusterGoSummary_Select)) +
           ggtitle(paste("Dotplot ", g, enricher_PathwayName, sep=" "))
