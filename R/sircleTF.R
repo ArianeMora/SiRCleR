@@ -238,7 +238,7 @@ sircleORA_TF <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="
     
     if (!(dim(clusterGoSummary)[1] == 0)){
       #Add pathway information (% of genes in pathway detected)
-      clusterGoSummary <- merge(x= clusterGoSummary[,-2], y=Pathway[,-2],by.x="ID",by.y="term", all=TRUE)
+      clusterGoSummary <- merge(x= clusterGoSummary[,-2], y=Pathway[,-2],by.x="TF",by.y="term", all=TRUE)
       clusterGoSummary$Count[is.na(clusterGoSummary$Count)] <- 0
       clusterGoSummary$Percentage_of_TFtargets_detected <-round(((clusterGoSummary$Count/clusterGoSummary$TF_targets)*100),digits=2)
       clusterGoSummary <- clusterGoSummary[!duplicated(clusterGoSummary$ID),]
