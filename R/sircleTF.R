@@ -232,11 +232,12 @@ sircleORA_TF <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="
                                             #gson  = NULL,
                                             TERM2GENE=Term2gene ,
                                             TERM2NAME = term2name)
-    clusterGoSummary <- data.frame(clusterGo)%>%
-      dplyr::rename("TF"="ID",
-                    "DetectedTargets"="geneID")
+    clusterGoSummary <- data.frame(clusterGo)
     
     if (!(dim(clusterGoSummary)[1] == 0)){
+      clusterGoSummary <- clusterGoSummary%>%
+      dplyr::rename("TF"="ID",
+                    "DetectedTargets"="geneID")
       #Add pathway information (% of genes in pathway detected)
       clusterGoSummary <- merge(x= clusterGoSummary[,-2], y=Pathway[,-2],by.x="TF",by.y="term", all=TRUE)
       clusterGoSummary$Count[is.na(clusterGoSummary$Count)] <- 0
