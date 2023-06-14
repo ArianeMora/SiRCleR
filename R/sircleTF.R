@@ -263,15 +263,18 @@ sircleORA_TF <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="
         Dotplot <-  enrichplot::dotplot(clusterGo, showCategory=nrow(clusterGoSummary_Select)) +
           ggtitle(paste("Dotplot ", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_Dotplot_", g,"_" ,enricher_PathwayName, ".", fileType, sep=""), plot=Dotplot, width=10, height=8)
+        plot(Dotplot)
         #2. Emapplot
         x2 <- enrichplot::pairwise_termsim(clusterGo)
         Emapplot <-  enrichplot::emapplot(x2, pie_scale=1.5, layout = "nicely", showCategory=nrow(clusterGoSummary_Select))+
           ggtitle(paste("Emapplot", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_Emapplot_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=Emapplot, width=10, height=8)
+         plot(Emapplot)
         #4. Upsetplot:
         UpsetPlot <-  enrichplot::upsetplot(clusterGo, showCategory=nrow(clusterGoSummary_Select))+
           ggtitle(paste("UpsetPlot", g, enricher_PathwayName, sep=" "))
         ggsave(file=paste(outputFolder, "SiRCle-ORA_UpsetPlot_", g,"_", enricher_PathwayName, ".", fileType, sep=""), plot=UpsetPlot, width=10, height=8)
+        plot(UpsetPlot)
       }
     }
   }
