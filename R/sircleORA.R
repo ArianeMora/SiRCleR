@@ -182,10 +182,10 @@ sircleORA_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLab
   ## ------------ Run ----------- ##
   # open the data
   if(RemoveBackgroundGenes=="TRUE"){
-    df <- read.csv(filename)
+    df <- filename
     df <- subset(df, ! df$BG_Method == "FALSE")
   } else{
-    df <- read.csv(filename)
+    df <- filename
   }
 
   #Select universe and SiRCle clusters
