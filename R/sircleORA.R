@@ -222,7 +222,7 @@ sircleORA_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLab
       clusterGoSummary <- merge(x= clusterGoSummary[,-2], y=Pathway[,-2],by.x="ID",by.y="term", all=TRUE)
       clusterGoSummary$Count[is.na(clusterGoSummary$Count)] <- 0
       clusterGoSummary$Percentage_of_Pathway_detected <-round(((clusterGoSummary$Count/clusterGoSummary$Genes_in_Pathway)*100),digits=2)
-      clusterGoSummary <- clusterGoSummary[!duplicated(clusterGoSummary$TF),]
+      clusterGoSummary <- clusterGoSummary[!duplicated(clusterGoSummary$ID),]
       clusterGoSummary <- clusterGoSummary[order(clusterGoSummary$p.adjust),]
       clusterGoSummary <- clusterGoSummary[,c(1,9,2:8, 10:11)]
       #Safe file
