@@ -22,14 +22,14 @@
 #'
 #' Computes the regulatory clustering model (RCM) using the SiRCle regulatory rules for DNA-methylation, RNAseq and Proteomics data layers (MRP).
 #'
-#' @param rnaFile Filename for your RNAseq data (results from DeSeq2 and also your normalised expression counts)
-#' @param methFile  Filename for your DNA methylation data (results from differential methylation analysis)
-#' @param proteinFile Filename/path of you Protein data (results from DeSeq2 and also your normalised expression counts)
+#' @param rnaFile DF for your RNAseq data (results from DeSeq2 and also your normalised expression counts)
+#' @param methFile  DF for your DNA methylation data (results from differential methylation analysis)
+#' @param proteinFile DF of you Protein data (results from DeSeq2 and also your normalised expression counts)
 #' @param geneID Column name of geneId this MUST BE THE SAME in each of your protein, RNAseq and DNAmethylation files (we join on this)
-#' @param rnaValueCol Column name of RNA value in rnaFile 
-#' @param rnaPadjCol Column name of RNA p adjusted value in rnaFile 
-#' @param methValueCol Column name of Methylation difference value in methFile 
-#' @param methPadjCol Column name of Methylation p adjusted value in methFile 
+#' @param rnaValueCol Column name of RNA value in rnaFile
+#' @param rnaPadjCol Column name of RNA p adjusted value in rnaFile
+#' @param methValueCol Column name of Methylation difference value in methFile
+#' @param methPadjCol Column name of Methylation p adjusted value in methFile
 #' @param proteinValueCol  Column name of protein log fold change in proteinFile
 #' @param proteinPadjCol Column name of protein p adjusted value in proteinFile
 #' @param rnaPadjCutoff  \emph{Optional: }Padjusted cutoff for RNAseq data \strong{Default=0.05}
@@ -57,7 +57,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
      dplyr::rename("geneID"=paste(geneID),
            "ValueCol"=paste(methValueCol),
            "PadjCol"=paste(methPadjCol))
-  
+
   #First check for duplicates in "geneID" and drop if there are any
   if(length(proteinDF[duplicated(proteinDF$geneID), "geneID"]) > 0){
     doublons <- as.character(proteinDF[duplicated(proteinDF$geneID), "geneID"])#number of duplications
@@ -77,12 +77,12 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
     warning("DNA-methylation dataset contained duplicates based on geneID! Dropping duplicate IDs and kept only the first entry. You had ", length(doublons), " duplicates.")
     warning("Note that you should do this before running SiRCle.")
   }
-  
+
   #Tag genes that are detected in each data layer
   proteinDF$Detected <- "TRUE"
   rnaDF$Detected <- "TRUE"
   methDF$Detected <- "TRUE"
-  
+
   #Assign to Group based on individual Cutoff ("UP", "DOWN", "No Change")
   proteinDF <- proteinDF%>%
     mutate(Cutoff = case_when(proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol > prot_FC_cutoff ~ 'UP',
@@ -94,41 +94,41 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                        Cutoff == "No Change" & proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol < 0 ~ 'Significant Negative',
                                        Cutoff == "No Change" & proteinDF$PadjCol > prot_padj_cutoff ~ 'Not Significant',
                                        TRUE ~ 'FALSE'))
-  
+
   rnaDF <- rnaDF%>%
     mutate(Cutoff = case_when(rnaDF$PadjCol < rna_padj_cutoff & rnaDF$ValueCol > rna_FC_cutoff ~ 'UP',
                               rnaDF$PadjCol < rna_padj_cutoff & rnaDF$ValueCol < -rna_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change'))
-  
+
   methDF <- methDF%>%
     mutate(Cutoff = case_when(methDF$PadjCol < meth_padj_cutoff & methDF$ValueCol > meth_Diff_cutoff ~ 'Hypermethylation',
                               methDF$PadjCol < meth_padj_cutoff & methDF$ValueCol < -meth_Diff_cutoff ~ 'Hypomethylation',
                               TRUE ~ 'No Change'))
-  
-  #Merge the dataframes together: Merge the supplied RNAseq, DNA methylation and proteomics dataframes together. 
+
+  #Merge the dataframes together: Merge the supplied RNAseq, DNA methylation and proteomics dataframes together.
   ##Add prefix to column names to distinguish the different data types after merge
   colnames(proteinDF) <- paste0("proteinDF_", colnames(proteinDF))
   proteinDF <- proteinDF%>%
      dplyr::rename("geneID" = "proteinDF_geneID")
-  
+
   colnames(rnaDF) <- paste0("rnaDF_", colnames(rnaDF))
   rnaDF <- rnaDF%>%
      dplyr::rename("geneID"="rnaDF_geneID")
-  
+
   colnames(methDF) <- paste0("methDF_", colnames(methDF))
   methDF <- methDF%>%
      dplyr::rename("geneID"="methDF_geneID")
-  
+
   ##Merge
   MergeDF <- merge(methDF, rnaDF, by="geneID", all=TRUE)
   MergeDF <- merge(MergeDF, proteinDF, by="geneID", all=TRUE)
-  
+
   ##Mark the undetected genes in each data layer
-  MergeDF<-MergeDF %>% 
-    mutate_at(c("proteinDF_Detected","rnaDF_Detected", "methDF_Detected"), ~replace_na(.,"FALSE"))%>% 
+  MergeDF<-MergeDF %>%
+    mutate_at(c("proteinDF_Detected","rnaDF_Detected", "methDF_Detected"), ~replace_na(.,"FALSE"))%>%
     mutate_at(c("proteinDF_Cutoff","rnaDF_Cutoff", "methDF_Cutoff"), ~replace_na(.,"No Change"))%>%
     mutate_at(c("proteinDF_Cutoff_Specific"), ~replace_na(.,"Not Detected"))
-  
+
   #Apply Background filter (label genes that will be removed based on choosen background)
   if(backgroundMethod == "P|(M&R)"){# P|(M&R) = Protein AND (DNA methylation OR RNA)
     MergeDF <- MergeDF%>%
@@ -182,7 +182,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
   else{
     stop("Please use one of the following backgroundMethods: P|(M&R), P|M|R, P|R, P&R, P&M&R, (P&M)|(P&R)|(M&R), (P&M)|(P&R), *")#error message
   }
-  
+
   #Assign SiRCle cluster names to the genes
   MergeDF <- MergeDF%>%
     mutate(RG1_All = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
@@ -204,7 +204,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'Hypermethylation + RNA DOWN + Protein UP',#State 10
                                methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'Hypermethylation + RNA No change + Protein UP',#State 11
                                methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'Hypermethylation + RNA UP + Protein UP',#State 12
-                               
+
                                methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'Hypomethylation + RNA DOWN + Protein DOWN',#State 13
                                methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'Hypomethylation + RNA No change + Protein DOWN',#State 14
                                methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'Hypomethylation + RNA UP + Protein DOWN',#State 15
@@ -223,7 +223,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'Hypomethylation + RNA DOWN + Protein UP',#State 19
                                methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'Hypomethylation + RNA No change + Protein UP',#State 20
                                methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'Hypomethylation + RNA UP + Protein UP',#State 21
-                               
+
                                methDF_Cutoff=="No Change" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'Methylation No Change + RNA DOWN + Protein DOWN',#State 25
                                methDF_Cutoff=="No Change" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'Methylation No Change + RNA No change + Protein DOWN',#State 26
                                methDF_Cutoff=="No Change" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'Methylation No Change + RNA UP + Protein DOWN',#State 27
@@ -262,7 +262,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                    methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'MDS_TMDE',#State 10
                                    methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 11
                                    methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDE',#State 12
-                                   
+
                                    methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDS',#State 13
                                    methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 14
                                    methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'MDE_TMDS',#State 15
@@ -281,7 +281,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                    methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDS_TMDE',#State 19
                                    methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 20
                                    methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'MDE',#State 21
-                                   
+
                                    methDF_Cutoff=="No Change" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDS',#State 25
                                    methDF_Cutoff=="No Change" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 26
                                    methDF_Cutoff=="No Change" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDE_TMDS',#State 27
@@ -320,7 +320,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                    methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 10
                                    methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 11
                                    methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDE',#State 12
-                                   
+
                                    methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDS',#State 13
                                    methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 14
                                    methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 15
@@ -339,7 +339,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                    methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 19
                                    methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 20
                                    methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'MDE',#State 21
-                                   
+
                                    methDF_Cutoff=="No Change" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDS',#State 25
                                    methDF_Cutoff=="No Change" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 26
                                    methDF_Cutoff=="No Change" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 27
@@ -378,7 +378,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                      methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'MDS_TMDE',#State 10
                                      methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 11
                                      methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDE',#State 12
-                                     
+
                                      methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDS',#State 13
                                      methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 14
                                      methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'MDE_TMDS',#State 15
@@ -397,7 +397,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                      methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDS_TMDE',#State 19
                                      methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 20
                                      methDF_Cutoff=="Hypomethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'MDE',#State 21
-                                     
+
                                      methDF_Cutoff=="No Change" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDS',#State 25
                                      methDF_Cutoff=="No Change" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 26
                                      methDF_Cutoff=="No Change" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDE_TMDS',#State 27
@@ -417,18 +417,18 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                      methDF_Cutoff=="No Change" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 35
                                      methDF_Cutoff=="No Change" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDE',#State 36
                                      TRUE ~ 'NA'))
-  
+
   #Safe the DF and return the groupings
   ##RCM DF (Merged InputDF filtered for background with assigned SiRcle cluster names)
   MergeDF_Select1 <- MergeDF[, c("geneID", "methDF_Detected","methDF_ValueCol","methDF_PadjCol","methDF_Cutoff", "rnaDF_Detected","rnaDF_ValueCol","rnaDF_PadjCol","rnaDF_Cutoff", "proteinDF_Detected", "proteinDF_ValueCol","proteinDF_PadjCol","proteinDF_Cutoff", "proteinDF_Cutoff_Specific", "BG_Method", "RG1_All", "RG2_Changes", "RG3_Protein", "RG4_Detection")]
-  
+
   proteinValueCol_Unique<-paste("proteinDF_",proteinValueCol)
   proteinPadjCol_Unique <-paste("proteinDF_",proteinPadjCol)
   rnaValueCol_Unique<-paste("rnaDF_",rnaValueCol)
   rnaPadjCol_Unique <-paste("rnaDF_",rnaPadjCol)
   methValueCol_Unique<-paste("methDF_",methValueCol)
   methPadjCol_Unique <-paste("methDF_",methPadjCol)
-  
+
   MergeDF_Select2<- subset(MergeDF, select=-c(methDF_Detected,methDF_Cutoff, rnaDF_Detected,rnaDF_Cutoff, proteinDF_Detected,proteinDF_Cutoff, proteinDF_Cutoff_Specific, BG_Method, RG1_All, RG2_Changes, RG3_Protein, RG4_Detection))%>%
      dplyr::rename(!!proteinValueCol_Unique :="proteinDF_ValueCol",#This syntax is needed since paste(geneID)="geneID" is not working in dyplr
            !!proteinPadjCol_Unique :="proteinDF_PadjCol",
@@ -436,42 +436,42 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
            !!rnaPadjCol_Unique :="rnaDF_PadjCol",
            !!methValueCol_Unique :="methDF_ValueCol",
            !!methPadjCol_Unique :="methDF_PadjCol")
-  
+
   MergeDF_Rearrange <- merge(MergeDF_Select1, MergeDF_Select2, by="geneID")
-  
+
   #Create Folder, Safe file and return to environment:
   SiRCleRCM_results_folder = paste(getwd(), "/SiRCleRCM",  sep="")
   if (!dir.exists(SiRCleRCM_results_folder)) {dir.create(SiRCleRCM_results_folder)}#
   SiRCleRCM_MRP_results_folder = paste(SiRCleRCM_results_folder, "/SiRCleRCM_MRP_",Sys.Date(), sep="")
   if (!dir.exists(SiRCleRCM_MRP_results_folder)) {dir.create(SiRCleRCM_MRP_results_folder)}  # check and create folder
-  
+
   write.csv(MergeDF_Rearrange, paste("SiRCleRCM/SiRCleRCM_MRP_", Sys.Date(), "/", OutputFileName, ".csv", sep=""), row.names = FALSE)
   assign(OutputFileName, MergeDF_Rearrange, envir=.GlobalEnv)
-  
+
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
   ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
     count(RG1_All, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG1_All")
   ClusterSummary_RG1$`Regulation Grouping` <- "RG1_All"
-  
+
   ClusterSummary_RG2 <- MergeDF_Rearrange[,c("geneID", "RG2_Changes")]%>%
     count(RG2_Changes, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG2_Changes")
   ClusterSummary_RG2$`Regulation Grouping` <- "RG2_Changes"
-  
+
   ClusterSummary_RG3 <- MergeDF_Rearrange[,c("geneID", "RG3_Protein")]%>%
     count(RG3_Protein, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG3_Protein")
   ClusterSummary_RG3$`Regulation Grouping` <- "RG3_Protein"
-  
+
   ClusterSummary_RG4 <- MergeDF_Rearrange[,c("geneID","RG4_Detection")]%>%
     count(RG4_Detection, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG4_Detection")
   ClusterSummary_RG4$`Regulation Grouping` <- "RG4_Detection"
-  
+
   ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3 , ClusterSummary_RG4)
   ClusterSummary <- ClusterSummary[,c(3,1,2)]
-  
+
   write.csv(ClusterSummary, paste("SiRCleRCM/SiRCleRCM_MRP_", Sys.Date(), "/", "Summary_",OutputFileName, ".csv", sep=""), row.names = FALSE)
   assign(paste("Summary_",OutputFileName, sep=""), ClusterSummary, envir=.GlobalEnv)
 }
@@ -481,11 +481,11 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
 #'
 #' Computes the regulatory clustering model (RCM) using the SiRCle regulatory rules for RNAseq and Proteomics data layers (RP).
 #'
-#' @param rnaFile Filename for your RNAseq data (results from DeSeq2 and also your normalised expression counts)
-#' @param proteinFile Filename/path of you Protein data (results from DeSeq2 and also your normalised expression counts)
+#' @param rnaFile DF for your RNAseq data (results from DeSeq2 and also your normalised expression counts)
+#' @param proteinFile DF of your Protein data (results from DeSeq2 and also your normalised expression counts)
 #' @param geneID Column name of geneId this MUST BE THE SAME in each of your protein, RNAseq and DNAmethylation files (we join on this)
-#' @param rnaValueCol Column name of RNA value in rnaFile 
-#' @param rnaPadjCol Column name of RNA p adjusted value in rnaFile 
+#' @param rnaValueCol Column name of RNA value in rnaFile
+#' @param rnaPadjCol Column name of RNA p adjusted value in rnaFile
 #' @param proteinValueCol  Column name of protein log fold change in proteinFile
 #' @param proteinPadjCol Column name of protein p adjusted value in proteinFile
 #' @param rnaPadjCutoff  \emph{Optional: }Padjusted cutoff for RNAseq data \strong{Default=0.05}
@@ -507,7 +507,7 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
      dplyr::rename("geneID"=paste(geneID),
            "ValueCol"=paste(rnaValueCol),
            "PadjCol"=paste(rnaPadjCol))
-  
+
   #First check for duplicates in "geneID" and drop if there are any
   if(length(proteinDF[duplicated(proteinDF$geneID), "geneID"]) > 0){
     doublons <- as.character(proteinDF[duplicated(proteinDF$geneID), "geneID"])#number of duplications
@@ -521,11 +521,11 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
     warning("RNAseq dataset contained duplicates based on geneID! Dropping duplicate IDs and kept only the first entry. You had ", length(doublons), " duplicates.")
     warning("Note that you should do this before running SiRCle.")
   }
-  
+
   #Tag genes that are detected in each data layer
   proteinDF$Detected <- "TRUE"
   rnaDF$Detected <- "TRUE"
-  
+
   #Assign to Group based on individual Cutoff ("UP", "DOWN", "No Change")
   proteinDF <- proteinDF%>%
     mutate(Cutoff = case_when(proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol > prot_FC_cutoff ~ 'UP',
@@ -537,31 +537,31 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
                                        Cutoff == "No Change" & proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol < 0 ~ 'Significant Negative',
                                        Cutoff == "No Change" & proteinDF$PadjCol > prot_padj_cutoff ~ 'Not Significant',
                                        TRUE ~ 'FALSE'))
-  
+
   rnaDF <- rnaDF%>%
     mutate(Cutoff = case_when(rnaDF$PadjCol < rna_padj_cutoff & rnaDF$ValueCol > rna_FC_cutoff ~ 'UP',
                               rnaDF$PadjCol < rna_padj_cutoff & rnaDF$ValueCol < -rna_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change'))
-  
-  #Merge the dataframes together: Merge the supplied RNAseq and proteomics dataframes together. 
+
+  #Merge the dataframes together: Merge the supplied RNAseq and proteomics dataframes together.
   ##Add prefix to column names to distinguish the different data types after merge
   colnames(proteinDF) <- paste0("proteinDF_", colnames(proteinDF))
   proteinDF <- proteinDF%>%
      dplyr::rename("geneID" = "proteinDF_geneID")
-  
+
   colnames(rnaDF) <- paste0("rnaDF_", colnames(rnaDF))
   rnaDF <- rnaDF%>%
      dplyr::rename("geneID"="rnaDF_geneID")
-  
+
   ##Merge
   MergeDF <- merge(rnaDF, proteinDF, by="geneID", all=TRUE)
-  
+
   ##Mark the undetected genes in each data layer
-  MergeDF<-MergeDF %>% 
-    mutate_at(c("proteinDF_Detected","rnaDF_Detected"), ~replace_na(.,"FALSE"))%>% 
+  MergeDF<-MergeDF %>%
+    mutate_at(c("proteinDF_Detected","rnaDF_Detected"), ~replace_na(.,"FALSE"))%>%
     mutate_at(c("proteinDF_Cutoff","rnaDF_Cutoff"), ~replace_na(.,"No Change"))%>%
     mutate_at(c("proteinDF_Cutoff_Specific"), ~replace_na(.,"Not Detected"))
-  
+
   #Apply Background filter (label genes that will be removed based on choosen background)
   if(backgroundMethod == "P|R)"){# P|R = Protein OR RNA
     MergeDF <- MergeDF%>%
@@ -593,7 +593,7 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
   else{
     stop("Please use one of the following backgroundMethods: P|R, P&R, P, R, *")#error message
   }
-  
+
   #Assign SiRCle cluster names to the genes
   MergeDF <- MergeDF%>%
     mutate(RG1_All = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
@@ -603,14 +603,14 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
                                rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'RNA DOWN + Protein Significant Negative',#State 4
                                rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'RNA DOWN + Protein Significant Positive',#State 5
                                rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'RNA DOWN + Protein UP',#State 6
-                               
+
                                rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'RNA No Change + Protein DOWN',#State 7
                                rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'RNA No Change + Protein Not Detected',#State 8
                                rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'RNA No Change + Protein Not Significant',#State 9
                                rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'RNA No Change + Protein Significant Negative',#State 10
                                rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'RNA No Change + Protein Significant Positive',#State 11
                                rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'RNA No Change + Protein UP',#State 6
-                               
+
                                rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'RNA UP + Protein DOWN',#State 12
                                rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'RNA UP + Protein Not Detected',#State 13
                                rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'RNA UP + Protein Not Significant',#State 14
@@ -625,14 +625,14 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
                                    rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'TPDS',#State 4
                                    rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'TPDS_TMDE',#State 5
                                    rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDS_TMDE',#State 6
-                                   
+
                                    rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 7
                                    rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'None',#State 8
                                    rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'None',#State 9
                                    rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 10
                                    rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 11
                                    rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 6
-                                   
+
                                    rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDE_TMDS',#State 12
                                    rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'TPDE_TMDS',#State 13
                                    rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'TPDE_TMDS',#State 14
@@ -647,14 +647,14 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
                                    rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'TPDS',#State 4
                                    rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'TMDE',#State 5
                                    rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 6
-                                   
+
                                    rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 7
                                    rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'None',#State 8
                                    rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'None',#State 9
                                    rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 10
                                    rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 11
                                    rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 6
-                                   
+
                                    rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 12
                                    rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'TPDE',#State 13
                                    rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'TPDE',#State 14
@@ -669,14 +669,14 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
                                      rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'TPDS',#State 4
                                      rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'TPDS_TMDE',#State 5
                                      rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDS_TMDE',#State 6
-                                     
+
                                      rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 7
                                      rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'None',#State 8
                                      rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'None',#State 9
                                      rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 10
                                      rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 11
                                      rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 6
-                                     
+
                                      rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDE_TMDS',#State 12
                                      rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'TPDE',#State 13
                                      rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'TPDE_TMDS',#State 14
@@ -684,57 +684,57 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
                                      rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'TPDE',#State 16
                                      rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDE',#State 17
                                      TRUE ~ 'NA'))
-  
+
   #Safe the DF and return the groupings
   ##RCM DF (Merged InputDF filtered for background with assigned SiRcle cluster names)
   MergeDF_Select1 <- MergeDF[, c("geneID", "rnaDF_Detected","rnaDF_ValueCol","rnaDF_PadjCol","rnaDF_Cutoff", "proteinDF_Detected", "proteinDF_ValueCol","proteinDF_PadjCol","proteinDF_Cutoff", "proteinDF_Cutoff_Specific", "BG_Method", "RG1_All", "RG2_Changes", "RG3_Protein", "RG4_Detection")]
-  
+
   proteinValueCol_Unique<-paste("proteinDF_",proteinValueCol)
   proteinPadjCol_Unique <-paste("proteinDF_",proteinPadjCol)
   rnaValueCol_Unique<-paste("rnaDF_",rnaValueCol)
   rnaPadjCol_Unique <-paste("rnaDF_",rnaPadjCol)
-  
+
   MergeDF_Select2<- subset(MergeDF, select=-c(rnaDF_Detected,rnaDF_Cutoff, proteinDF_Detected,proteinDF_Cutoff, proteinDF_Cutoff_Specific, BG_Method, RG1_All, RG2_Changes, RG3_Protein, RG4_Detection))%>%
      dplyr::rename(!!proteinValueCol_Unique :="proteinDF_ValueCol",#This syntax is needed since paste(geneID)="geneID" is not working in dyplr
            !!proteinPadjCol_Unique :="proteinDF_PadjCol",
            !!rnaValueCol_Unique :="rnaDF_ValueCol",
            !!rnaPadjCol_Unique :="rnaDF_PadjCol")
-  
+
   MergeDF_Rearrange <- merge(MergeDF_Select1, MergeDF_Select2, by="geneID")
-  
+
   #Create Folder, Safe file and return to environment:
   SiRCleRCM_results_folder = paste(getwd(), "/SiRCleRCM",  sep="")
   if (!dir.exists(SiRCleRCM_results_folder)) {dir.create(SiRCleRCM_results_folder)}#
   SiRCleRCM_RP_results_folder = paste(SiRCleRCM_results_folder, "/SiRCleRCM_RP_",Sys.Date(), sep="")
   if (!dir.exists(SiRCleRCM_RP_results_folder)) {dir.create(SiRCleRCM_RP_results_folder)}  # check and create folder
-  
+
   write.csv(MergeDF_Rearrange, paste("SiRCleRCM/SiRCleRCM_RP_", Sys.Date(), "/", OutputFileName, ".csv", sep=""), row.names = FALSE)
   assign(OutputFileName, MergeDF_Rearrange, envir=.GlobalEnv)
-  
+
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
   ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
     count(RG1_All, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG1_All")
   ClusterSummary_RG1$`Regulation Grouping` <- "RG1_All"
-  
+
   ClusterSummary_RG2 <- MergeDF_Rearrange[,c("geneID", "RG2_Changes")]%>%
     count(RG2_Changes, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG2_Changes")
   ClusterSummary_RG2$`Regulation Grouping` <- "RG2_Changes"
-  
+
   ClusterSummary_RG3 <- MergeDF_Rearrange[,c("geneID", "RG3_Protein")]%>%
     count(RG3_Protein, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG3_Protein")
   ClusterSummary_RG3$`Regulation Grouping` <- "RG3_Protein"
-  
+
   ClusterSummary_RG4 <- MergeDF_Rearrange[,c("geneID","RG4_Detection")]%>%
     count(RG4_Detection, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG4_Detection")
   ClusterSummary_RG4$`Regulation Grouping` <- "RG4_Detection"
-  
+
   ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3 , ClusterSummary_RG4)
   ClusterSummary <- ClusterSummary[,c(3,1,2)]
-  
+
   write.csv(ClusterSummary, paste("SiRCleRCM/SiRCleRCM_RP_", Sys.Date(), "/", "Summary_",OutputFileName, ".csv", sep=""), row.names = FALSE)
   assign(paste("Summary_",OutputFileName, sep=""), ClusterSummary, envir=.GlobalEnv)
 }
@@ -745,11 +745,11 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
 #'
 #' Computes the regulatory clustering model (RCM) using the SiRCle regulatory rules between two conditions of the same data type.
 #'
-#' @param Cond1File Filename for your data (results from e.g. DeSeq2)
-#' @param Cond2File Filename for your data (results from e.g. DeSeq2)
+#' @param Cond1File DF for your data (results from e.g. DeSeq2)
+#' @param Cond2File DF for your data (results from e.g. DeSeq2)
 #' @param geneID Column name of geneId this MUST BE THE SAME in each of your Input files (we join on this)
-#' @param Cond1ValueCol Column name of log fold change in Cond1File 
-#' @param Cond1PadjCol Column name of p adjusted value in Cond1File 
+#' @param Cond1ValueCol Column name of log fold change in Cond1File
+#' @param Cond1PadjCol Column name of p adjusted value in Cond1File
 #' @param Cond2ValueCol  Column name of log fold change in Cond2File
 #' @param Cond2PadjCol Column name of protein p adjusted value in Cond2File
 #' @param Cond1PadjCutoff  \emph{Optional: }Padjusted cutoff forCond1 data \strong{Default=0.05}
@@ -771,7 +771,7 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
      dplyr::rename("geneID"=paste(geneID),
            "ValueCol"=paste(Cond1ValueCol),
            "PadjCol"=paste(Cond1PadjCol))
-  
+
   #First check for duplicates in "geneID" and drop if there are any
   if(length(Cond2_DF[duplicated(Cond2_DF$geneID), "geneID"]) > 0){
     doublons <- as.character(Cond2_DF[duplicated(Cond2_DF$geneID), "geneID"])#number of duplications
@@ -785,11 +785,11 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
     warning("Cond1 dataset contained duplicates based on geneID! Dropping duplicate IDs and kept only the first entry. You had ", length(doublons), " duplicates.")
     warning("Note that you should do this before running SiRCle.")
   }
-  
+
   #Tag genes that are detected in each data layer
   Cond2_DF$Detected <- "TRUE"
   Cond1_DF$Detected <- "TRUE"
-  
+
   #Assign to Group based on individual Cutoff ("UP", "DOWN", "No Change")
   Cond2_DF <- Cond2_DF%>%
     mutate(Cutoff = case_when(Cond2_DF$PadjCol < Cond2_padj_cutoff & Cond2_DF$ValueCol > Cond2_FC_cutoff ~ 'UP',
@@ -801,7 +801,7 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                                        Cutoff == "No Change" & Cond2_DF$PadjCol < Cond2_padj_cutoff & Cond2_DF$ValueCol < 0 ~ 'Significant Negative',
                                        Cutoff == "No Change" & Cond2_DF$PadjCol > Cond2_padj_cutoff ~ 'Not Significant',
                                        TRUE ~ 'FALSE'))
-  
+
   Cond1_DF <-Cond1_DF%>%
     mutate(Cutoff = case_when(Cond1_DF$PadjCol <Cond1_padj_cutoff &Cond1_DF$ValueCol >Cond1_FC_cutoff ~ 'UP',
                              Cond1_DF$PadjCol <Cond1_padj_cutoff &Cond1_DF$ValueCol < -Cond1_FC_cutoff ~ 'DOWN',
@@ -812,26 +812,26 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                                        Cutoff == "No Change" & Cond1_DF$PadjCol < Cond1_padj_cutoff & Cond1_DF$ValueCol < 0 ~ 'Significant Negative',
                                        Cutoff == "No Change" & Cond1_DF$PadjCol > Cond1_padj_cutoff ~ 'Not Significant',
                                        TRUE ~ 'FALSE'))
-  
-  #Merge the dataframes together: Merge the suppliedCond1seq and Cond2eomics dataframes together. 
+
+  #Merge the dataframes together: Merge the suppliedCond1seq and Cond2eomics dataframes together.
   ##Add prefix to column names to distinguish the different data types after merge
   colnames(Cond2_DF) <- paste0("Cond2_DF_", colnames(Cond2_DF))
   Cond2_DF <- Cond2_DF%>%
      dplyr::rename("geneID" = "Cond2_DF_geneID")
-  
+
   colnames(Cond1_DF) <- paste0("Cond1_DF_", colnames(Cond1_DF))
   Cond1_DF <-Cond1_DF%>%
      dplyr::rename("geneID"="Cond1_DF_geneID")
-  
+
   ##Merge
   MergeDF <- merge(Cond1_DF, Cond2_DF, by="geneID", all=TRUE)
-  
+
   ##Mark the undetected genes in each data layer
-  MergeDF<-MergeDF %>% 
-    mutate_at(c("Cond2_DF_Detected","Cond1_DF_Detected"), ~replace_na(.,"FALSE"))%>% 
+  MergeDF<-MergeDF %>%
+    mutate_at(c("Cond2_DF_Detected","Cond1_DF_Detected"), ~replace_na(.,"FALSE"))%>%
     mutate_at(c("Cond2_DF_Cutoff","Cond1_DF_Cutoff"), ~replace_na(.,"No Change"))%>%
     mutate_at(c("Cond2_DF_Cutoff_Specific", "Cond1_DF_Cutoff_Specific"), ~replace_na(.,"Not Detected"))
-  
+
   #Apply Background filter (label genes that will be removed based on choosen background)
   if(backgroundMethod == "C1|C2"){# C1|C2 = Cond2 OR Cond1
     MergeDF <- MergeDF%>%
@@ -858,7 +858,7 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
   }else{
    stop("Please use one of the following backgroundMethods: C1|C2, C1&C2, C2, C1, *")#error message
   }
-  
+
   #Assign SiRCle cluster names to the genes
   MergeDF <- MergeDF%>%
     mutate(RG1_Specific_Cond2 = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
@@ -868,14 +868,14 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                               Cond1_DF_Cutoff=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 DOWN + Cond2 Significant Negative',#State 4
                               Cond1_DF_Cutoff=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 DOWN + Cond2 Significant Positive',#State 5
                               Cond1_DF_Cutoff=="DOWN" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 DOWN + Cond2 UP',#State 6
-                               
+
                               Cond1_DF_Cutoff=="No Change" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 No Change + Cond2 DOWN',#State 7
                               Cond1_DF_Cutoff=="No Change" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 No Change + Cond2 Not Detected',#State 8
                               Cond1_DF_Cutoff=="No Change" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 No Change + Cond2 Not Significant',#State 9
                               Cond1_DF_Cutoff=="No Change" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 No Change + Cond2 Significant Negative',#State 10
                               Cond1_DF_Cutoff=="No Change" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 No Change + Cond2 Significant Positive',#State 11
                               Cond1_DF_Cutoff=="No Change" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 No Change + Cond2 UP',#State 6
-                               
+
                               Cond1_DF_Cutoff=="UP" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 UP + Cond2 DOWN',#State 12
                               Cond1_DF_Cutoff=="UP" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 UP + Cond2 Not Detected',#State 13
                               Cond1_DF_Cutoff=="UP" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 UP + Cond2 Not Significant',#State 14
@@ -890,14 +890,14 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                               Cond2_DF_Cutoff=="DOWN" & Cond1_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond2 DOWN + Cond1 Significant Negative',#State 4
                               Cond2_DF_Cutoff=="DOWN" & Cond1_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond2 DOWN + Cond1 Significant Positive',#State 5
                               Cond2_DF_Cutoff=="DOWN" & Cond1_DF_Cutoff_Specific=="UP" ~ 'Cond2 DOWN + Cond1 UP',#State 6
-                               
+
                               Cond2_DF_Cutoff=="No Change" & Cond1_DF_Cutoff_Specific=="DOWN" ~ 'Cond2 No Change + Cond1 DOWN',#State 7
                               Cond2_DF_Cutoff=="No Change" & Cond1_DF_Cutoff_Specific=="Not Detected" ~ 'Cond2 No Change + Cond1 Not Detected',#State 8
                               Cond2_DF_Cutoff=="No Change" & Cond1_DF_Cutoff_Specific=="Not Significant" ~ 'Cond2 No Change + Cond1 Not Significant',#State 9
                               Cond2_DF_Cutoff=="No Change" & Cond1_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond2 No Change + Cond1 Significant Negative',#State 10
                               Cond2_DF_Cutoff=="No Change" & Cond1_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond2 No Change + Cond1 Significant Positive',#State 11
                               Cond2_DF_Cutoff=="No Change" & Cond1_DF_Cutoff_Specific=="UP" ~ 'Cond2 No Change + Cond1 UP',#State 6
-                               
+
                               Cond2_DF_Cutoff=="UP" & Cond1_DF_Cutoff_Specific=="DOWN" ~ 'Cond2 UP + Cond1 DOWN',#State 12
                               Cond2_DF_Cutoff=="UP" & Cond1_DF_Cutoff_Specific=="Not Detected" ~ 'Cond2 UP + Cond1 Not Detected',#State 13
                               Cond2_DF_Cutoff=="UP" & Cond1_DF_Cutoff_Specific=="Not Significant" ~ 'Cond2 UP + Cond1 Not Significant',#State 14
@@ -912,35 +912,35 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 DOWN + Cond2 Significant Negative',#State 4
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 DOWN + Cond2 Significant Positive',#State 5
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 DOWN + Cond2 UP',#State 6
-                                
+
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 UP + Cond2 DOWN',#State 12
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 UP + Cond2 Not Detected',#State 13
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 UP + Cond2 Not Significant',#State 14
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 UP + Cond2 Significant Negative',#State 15
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 UP + Cond2 Significant Positive',#State 16
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 UP + Cond2 UP',#State 17
-                              
+
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 Not Detected + Cond2 DOWN',#State 12
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 Not Detected + Cond2 Not Detected',#State 13
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 Not Detected + Cond2 Not Significant',#State 14
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 Not Detected + Cond2 Significant Negative',#State 15
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 Not Detected + Cond2 Significant Positive',#State 16
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 Not Detected + Cond2 UP',#State 17
-                             
+
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 Significant Negative + Cond2 DOWN',#State 12
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 Significant Negative + Cond2 Not Detected',#State 13
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 Significant Negative + Cond2 Not Significant',#State 14
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 Significant Negative + Cond2 Significant Negative',#State 15
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 Significant Negative + Cond2 Significant Positive',#State 16
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 Significant Negative + Cond2 UP',#State 17
-                             
+
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 Significant Positive + Cond2 DOWN',#State 12
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 Significant Positive + Cond2 Not Detected',#State 13
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 Significant Positive + Cond2 Not Significant',#State 14
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1 Significant Positive + Cond2 Significant Negative',#State 15
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 Significant Positive + Cond2 Significant Positive',#State 16
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 Significant Positive + Cond2 UP',#State 17
-                              
+
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 Not Significant + Cond2 DOWN',#State 12
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 Not Significant + Cond2 Not Detected',#State 13
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 Not Significant + Cond2 Not Significant',#State 14
@@ -955,35 +955,35 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Core_DOWN',#State 4
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Opposite',#State 5
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Opposite',#State 6
-                                  
+
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Opposite',#State 12
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1_UP',#State 13
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1_UP',#State 14
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Opposite',#State 15
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Core_UP',#State 16
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Core_UP',#State 17
-                              
+
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond2_DOWN',#State 12
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond2_UP',#State 17
-                             
+
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Core_DOWN',#State 12
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Opposite',#State 17
-                             
+
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Opposite',#State 12
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Core_UP',#State 17
-                              
+
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond2_DOWN',#State 12
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
@@ -998,35 +998,35 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1_DOWN',#State 4
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1_DOWN',#State 5
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Opposite',#State 6
-                                  
+
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Opposite',#State 12
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1_UP',#State 13
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1_UP',#State 14
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'Cond1_UP',#State 15
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1_UP',#State 16
                               Cond1_DF_Cutoff_Specific=="UP" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Core_UP',#State 17
-                              
+
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond2_DOWN',#State 12
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
                               Cond1_DF_Cutoff_Specific=="Not Detected" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond2_UP',#State 17
-                             
+
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond2_DOWN',#State 12
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
                               Cond1_DF_Cutoff_Specific=="Significant Negative" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond2_UP',#State 17
-                             
+
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond2_DOWN',#State 12
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Significant Negative" ~ 'None',#State 15
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
                               Cond1_DF_Cutoff_Specific=="Significant Positive" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond2_UP',#State 17
-                              
+
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond2_DOWN',#State 12
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'None',#State 13
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'None',#State 14
@@ -1034,47 +1034,47 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1_UP',#State 1
                                TRUE ~ 'NA'))
-   
+
   #Safe the DF and return the groupings
   ##RCM DF (Merged InputDF filtered for background with assigned SiRcle cluster names)
   MergeDF_Select1 <- MergeDF[, c("geneID", "Cond1_DF_Detected","Cond1_DF_ValueCol","Cond1_DF_PadjCol","Cond1_DF_Cutoff", "Cond1_DF_Cutoff_Specific", "Cond2_DF_Detected", "Cond2_DF_ValueCol","Cond2_DF_PadjCol","Cond2_DF_Cutoff", "Cond2_DF_Cutoff_Specific", "BG_Method", "RG1_All", "RG2_Significant", "RG3_SignificantChange")]
-  
+
   Cond2ValueCol_Unique<-paste("Cond2_DF_",Cond2ValueCol)
   Cond2PadjCol_Unique <-paste("Cond2_DF_",Cond2PadjCol)
   Cond1ValueCol_Unique<-paste("Cond1_DF_",Cond1ValueCol)
   Cond1PadjCol_Unique <-paste("Cond1_DF_",Cond1PadjCol)
-  
+
   MergeDF_Select2<- subset(MergeDF, select=-c(Cond1_DF_Detected,Cond1_DF_Cutoff, Cond2_DF_Detected,Cond2_DF_Cutoff, Cond2_DF_Cutoff_Specific, BG_Method, RG1_All, RG2_Significant, RG3_SignificantChange))%>%
      dplyr::rename(!!Cond2ValueCol_Unique :="Cond2_DF_ValueCol",#This syntax is needed since paste(geneID)="geneID" is not working in dyplr
            !!Cond2PadjCol_Unique :="Cond2_DF_PadjCol",
            !!Cond1ValueCol_Unique :="Cond1_DF_ValueCol",
            !!Cond1PadjCol_Unique :="Cond1_DF_PadjCol")
-  
+
   MergeDF_Rearrange <- merge(MergeDF_Select1, MergeDF_Select2, by="geneID")
-  
+
   write.csv(MergeDF_Rearrange, paste(OutputFileName , ".csv", sep=""), row.names = FALSE)
-  
+
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
   ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
     count(RG1_All, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG1_All")
   ClusterSummary_RG1$`Regulation Grouping` <- "RG1_All"
-  
+
   ClusterSummary_RG2 <- MergeDF_Rearrange[,c("geneID", "RG2_Significant")]%>%
     count(RG2_Significant, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG2_Significant")
   ClusterSummary_RG2$`Regulation Grouping` <- "RG2_Significant"
-  
+
   ClusterSummary_RG3 <- MergeDF_Rearrange[,c("geneID", "RG3_SignificantChange")]%>%
     count(RG3_SignificantChange, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG3_SignificantChange")
   ClusterSummary_RG3$`Regulation Grouping` <- "RG3_SignificantChange"
-  
+
   ClusterSummary <- rbind(ClusterSummary_RG1, ClusterSummary_RG2,ClusterSummary_RG3)
   ClusterSummary <- ClusterSummary[,c(3,1,2)]
-  
+
   write.csv(ClusterSummary, paste(OutputFileName, "_Summary.csv", sep=""), row.names = FALSE)
-  
+
   return(MergeDF_Rearrange)
 }
 

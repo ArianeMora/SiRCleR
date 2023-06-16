@@ -32,7 +32,12 @@ sircleORAHuman(
 \item{minGSSize}{\emph{Optional: } minimum group size in ORA \strong{default: 10}}
 
 \item{qvalueCutoff}{\emph{Optional: } q value cutoff from ORA \strong{default: 0.2}}
+
+\item{RemoveBackgroundGenes\emph{Optional:}{} If TRUE, genes that fall into background based on the choosen Background method for SiRCle RCM are removed from the universe. \strong{default: "TRUE"}}
+}
+\value{
+sircleORA an instance of the sircle package
 }
 \description{
-Uses encrichGo to run ORA on each of the clusters as defined by the regulatory labels (ON HUMAN)
+Uses encrichGo to run ORA on each of the clusters as defined by the regulatory labels using GO terms pathways (ON HUMAN)
 }

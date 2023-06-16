@@ -33,9 +33,9 @@ sircleRCM_2Cond(
 
 \item{backgroundMethod}{\emph{Optional: } Background method C1|C2, C1&C2, C2, C1 or * \strong{Default="C1&C2"}}
 
-\item{Cond1File}{Filename for your data (results from e.g. DeSeq2)}
+\item{Cond1File}{DF for your data (results from e.g. DeSeq2)}
 
-\item{Cond2File}{Filename for your data (results from e.g. DeSeq2)}
+\item{Cond2File}{DF for your data (results from e.g. DeSeq2)}
 
 \item{Cond1PadjCutoff}{\emph{Optional: }Padjusted cutoff forCond1 data \strong{Default=0.05}}
 

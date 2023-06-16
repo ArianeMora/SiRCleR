@@ -21,7 +21,7 @@ sircleRCM_RP(
 )
 }
 \arguments{
-\item{rnaFile}{Filename for your RNAseq data (results from DeSeq2 and also your normalised expression counts)}
+\item{rnaFile}{DF for your RNAseq data (results from DeSeq2 and also your normalised expression counts)}
 
 \item{geneID}{Column name of geneId this MUST BE THE SAME in each of your protein, RNAseq and DNAmethylation files (we join on this)}
 
@@ -35,7 +35,7 @@ sircleRCM_RP(
 
 \item{backgroundMethod}{\emph{Optional: } Background method (NEED Description for each one here) \strong{Default="P&R"}}
 
-\item{proteinFile}{Filename/path of you Protein data (results from DeSeq2 and also your normalised expression counts)}
+\item{proteinFile}{DF of your Protein data (results from DeSeq2 and also your normalised expression counts)}
 
 \item{rnaPadjCutoff}{\emph{Optional: }Padjusted cutoff for RNAseq data \strong{Default=0.05}}
 

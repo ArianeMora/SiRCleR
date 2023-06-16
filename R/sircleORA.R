@@ -20,18 +20,18 @@
 
 #' sircleORAHuman
 #'
-#' Uses encrichGo to run ORA on each of the clusters as defined by the regulatory labels (ON HUMAN)
+#' Uses encrichGo to run ORA on each of the clusters as defined by the regulatory labels using GO terms pathways (ON HUMAN)
 #'
 #' @param filename Path to the input file
 #' @param entrezId Column name for the entrez ID
 #' @param regLabels \emph{Optional: } regLabels The label of the column with the regulatory labels \strong{default: "RegulatoryLabels"}
 #' @param emptyRegLabel \emph{Optional: } emptyRegLabel The label of the empty regulatory group \strong{default: ""}
-#' @paramRemoveBackgroundGenes\emph{Optional: } If TRUE, genes that fall into background based on the choosen Background method for SiRCle RCM are removed from the universe. \strong{default: "TRUE"}
+#' @param RemoveBackgroundGenes\emph{Optional: } If TRUE, genes that fall into background based on the choosen Background method for SiRCle RCM are removed from the universe. \strong{default: "TRUE"}
 #' @param fileType \emph{Optional: } fileType Output file type for the figures one of: "svg", "pdf", "png" \strong{default: "pdf"}
 #' @param minGSSize \emph{Optional: } minimum group size in ORA \strong{default: 10}
 #' @param qvalueCutoff \emph{Optional: } q value cutoff from ORA \strong{default: 0.2}
 #'
-#' @return
+#' @return sircleORA an instance of the sircle package
 #' @export
 
 sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emptyRegLabel="", RemoveBackgroundGenes="TRUE", fileType="pdf",
@@ -40,9 +40,8 @@ sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emp
   packages <- c("org.Hs.eg.db", "clusterProfiler", "svglite", "enrichplot")
   install.packages(setdiff(packages, rownames(installed.packages())))
   library(org.Hs.eg.db)
-  library(clusterProfiler)
   library(svglite)
-  library(enrichplot)
+
   ## ------------ Run ----------- ##
   # open the data
   if(RemoveBackgroundGenes=="TRUE"){
@@ -59,7 +58,7 @@ sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emp
     grpGenes <- subset(df, df[[regLabels]] == g)
     print(g)
     print(dim(grpGenes))
-    clusterGo <- enrichGO(gene = as.character(grpGenes[[entrezId]]),
+    clusterGo <- clusterProfiler::enrichGO(gene = as.character(grpGenes[[entrezId]]),
                           universe = allGenes,
                           keyType = "ENTREZID",
                           OrgDb = org.Hs.eg.db,
@@ -75,16 +74,16 @@ sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emp
     write.csv(clusterGoSummary, paste(outputFolder, 'ClusterGoSummary_', g, '.csv', sep=""))#Export the ORA results as .csv
 
     if (!(dim(clusterGoSummary)[1] == 0)) {#exclude df's that have no observations
-      Dotplot <- dotplot(clusterGo, showCategory=showCatagory) +
+      Dotplot <- enrichplot::dotplot(clusterGo, showCategory=showCatagory) +
         ggtitle(paste("Dotplot ", g, sep=""))
       ggsave(file=paste(outputFolder, "SiRCle-ORA_Dotplot_Human_", g, ".", fileType, sep=""), plot=Dotplot, width=10, height=8)
-      x2 <- pairwise_termsim(clusterGo)
 
-      Emapplot <- emapplot(x2, pie_scale=1.5, layout = "nicely")+
+      x2 <- enrichplot::pairwise_termsim(clusterGo)
+      Emapplot <- enrichplot::emapplot(x2, pie_scale=1.5, layout = "nicely")+
         ggtitle(paste("Emapplot ", g, sep=""))
       ggsave(file=paste(outputFolder, "SiRCle-ORA_Emapplot_Human_", g, ".", fileType, sep="" ), plot=Emapplot, width=10, height=8)
 
-      Heatplot <- heatplot(clusterGo,showCategory=showCatagory) +
+      Heatplot <- enrichplot::heatplot(clusterGo,showCategory=showCatagory) +
         theme(axis.text.x =element_text(size=5), axis.text.y =element_text(size=8,face="bold"), axis.title=element_text(size=12,face="bold"))+
         ggtitle(paste("Heatplot ", g, sep=""))
       ggsave(file=paste(outputFolder, "SiRCle-ORA_Heatplot_Human_", g, ".", fileType, sep="" ), plot=Heatplot, width=10, height=8)
@@ -96,20 +95,19 @@ sircleORAHuman <- function(filename, entrezId, regLabels="RegulatoryLabels", emp
 
 #' sircleORAMouse
 #'
-#' Uses encrichGo to run ORA on each of the clusters as defined by the regulatory labels (on MOUSE)
+#' Uses encrichGo to run ORA on each of the clusters as defined by the regulatory labels using GO terms pathways (on MOUSE)
 #'
 #' @param rcm Instance of RCM after running sircleRCM
 #' @param filename Path to the input file
 #' @param envPath \emph{Optional: } regLabels The label of the column with the regulatory labels \strong{default: "RegulatoryLabels"}
 #' @param envPath \emph{Optional: } fileType Output file type for the figures one of: "svg", "pdf", "png" \strong{default: "pdf"}
-#' @return
+#' @return sircleORA an instance of the sircle package
 #' @export
 sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf") {
   ## ------------ Setup and installs ----------- ##
   packages <- c("org.Mm.eg.db", "clusterProfiler", "svglite", "enrichplot")
-
   install.packages(setdiff(packages, rownames(installed.packages())))
-  library(clusterProfiler)
+
   library(org.Mm.eg.db)
   library(svglite)
 
@@ -124,7 +122,7 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
   grps_labels <- unlist(unique(clusterGenes[regLabels]))
   for(g in grps_labels) {
     grpGenes <- unlist(rcm$get_genes_in_reg_grp(g, entrezId))#I had to add unlist
-    clusterGo <- enrichGO(gene = grpGenes,
+    clusterGo <- clusterProfiler::enrichGO(gene = grpGenes,
                           universe = allGenes,
                           keyType = "ENTREZID",
                           OrgDb = org.Mm.eg.db,
@@ -136,15 +134,16 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
     write_csv(clusterGoSummary, paste('ClusterGoSummary_', g, '.csv', sep=""))#Export the ORA results as .csv
     if (!(dim(clusterGoSummary)[1] == 0)) {#exclude df's that have no observations
 
-      Dotplot <- dotplot(clusterGo, showCategory=30) +
+      Dotplot <- enrichplot::dotplot(clusterGo, showCategory=30) +
         ggtitle(paste("Dotplot ", g, sep=""))
       ggsave(file=paste("SiRCle-ORA_Dotplot_Mouse_", g, ".", fileType, sep=""), plot=Dotplot, width=10, height=8)
 
-      Emapplot <- emapplot(clusterGo, pie_scale=1.5, showCategory=30, layout = "nicely")+
+      x2 <- enrichplot::pairwise_termsim(clusterGo)
+      Emapplot <- enrichplot::emapplot(x2, pie_scale=1.5, showCategory=30, layout = "nicely")+
         ggtitle(paste("Emapplot ", g, sep=""))
       ggsave(file=paste("SiRCle-ORA_Emapplot_Mouse_", g, ".", fileType, sep="" ), plot=Emapplot,width=10, height=8)
 
-      Heatplot <- heatplot(clusterGo,showCategory=30) +
+      Heatplot <- enrichplot::heatplot(clusterGo,showCategory=30) +
         theme(axis.text.x =element_text(size=5), axis.text.y =element_text(size=8,face="bold"),  axis.title=element_text(size=12,face="bold"))+
         ggtitle(paste("Heatplot ", g, sep=""))
       ggsave(file=paste("SiRCle-ORA_Heatplot_Mouse_", g, ".", fileType, sep="" ),
@@ -162,7 +161,7 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
 #' @param filename Path to the input file
 #' @param regLabels \emph{Optional: } regLabels The label of the column with the regulatory labels \strong{default: "RegulatoryLabels"}
 #' @param emptyRegLabel \emph{Optional: } emptyRegLabel The label of the empty regulatory group \strong{default: ""}
-#' @paramRemoveBackgroundGenes\emph{Optional: } If TRUE, genes that fall into background based on the choosen Background method for SiRCle RCM are removed from the universe. \strong{default: "TRUE"}
+#' @param RemoveBackgroundGenes\emph{Optional: } If TRUE, genes that fall into background based on the choosen Background method for SiRCle RCM are removed from the universe. \strong{default: "TRUE"}
 #' @param enricher_geneID Provide column name for the gene ID. Needs to match the the gene ID in the pathway file provided
 #' @param enricher_Pathways Provide pathway file. Pathway file must include column "term" with the pathway name, column "gene" with the gene name and column "Description" with pathway description that will be depicted on the plots.
 #' @param enricher_PathwayName \emph{Optional: } Name of the pathway list used \strong{default: ""}
@@ -172,7 +171,7 @@ sircleORAMouse<- function(filename, regLabels="RegulatoryLabels", fileType="pdf"
 #' @param Plot_p.adj \emph{Optional: } q value cutoff from ORA that should be plotted \strong{default: 0.2}
 #' @param Plot_Percentage \emph{Optional: } Percentage of genes that are detected of a pathway \strong{default: 10}
 #'
-#' @return
+#' @return sircleORA an instance of the sircle package
 #' @export
 
 sircleORA_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="", RemoveBackgroundGenes="TRUE", enricher_geneID, enricher_Pathways, enricher_PathwayName="", fileType="pdf", minGSSize=10, maxGSSize=1000 , Plot_p.adj=0.2, Plot_Percentage=10, outputFolder=''){

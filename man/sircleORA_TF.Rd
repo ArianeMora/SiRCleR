@@ -21,7 +21,7 @@ sircleORA_TF(
 )
 }
 \arguments{
-\item{filename}{Path to the input file}
+\item{filename}{DF input file (= Output of rcm function).}
 
 \item{regLabels}{\emph{Optional: } regLabels The label of the column with the regulatory labels \strong{default: "RegulatoryLabels"}}
 
@@ -41,8 +41,13 @@ sircleORA_TF(
 
 \item{Plot_p.adj}{\emph{Optional: } q value cutoff from ORA that should be plotted \strong{default: 0.2}}
 
-\item{Plot_Percentage}{\emph{Optional: } Percentage of genes that are detected of a pathway \strong{default: 10}}
+\item{Plot_Percentage}{\emph{Optional: } Percentage of genes that are detected of a TF regulon \strong{default: 10}}
+
+\item{RemoveBackgroundGenes\emph{Optional:}{} If TRUE, genes that fall into background based on the chosen Background method for SiRCle RCM are removed from the universe. \strong{default: "TRUE"}}
+}
+\value{
+sircleTF an instance of the sircle package
 }
 \description{
-Uses enricher to run ORA on each of the clusters as defined by the regulatory labels using a TF regulon of choice
+Uses enricher to run ORA on each of the clusters as defined by the regulatory labels using a TF regulon or FIMO input of choice.
 }

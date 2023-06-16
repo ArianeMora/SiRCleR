@@ -42,6 +42,11 @@ sircleORA_Enrich(
 \item{Plot_p.adj}{\emph{Optional: } q value cutoff from ORA that should be plotted \strong{default: 0.2}}
 
 \item{Plot_Percentage}{\emph{Optional: } Percentage of genes that are detected of a pathway \strong{default: 10}}
+
+\item{RemoveBackgroundGenes\emph{Optional:}{} If TRUE, genes that fall into background based on the choosen Background method for SiRCle RCM are removed from the universe. \strong{default: "TRUE"}}
+}
+\value{
+sircleORA an instance of the sircle package
 }
 \description{
 Uses enricher to run ORA on each of the clusters as defined by the regulatory labels using a selfdefined pathway list
