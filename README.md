@@ -46,7 +46,7 @@ Note if you are running **Windows** you might have an issue with long paths, whi
 (If you have a different version of Windows, just google "Long paths fix" and your Windows version)
 
 ## Run
-See the **vignettes** folder for a proper tutorial including data you can run the functions with.
+See the **vignettes** folder for a proper tutorial including data you can run the functions with. FYI: currently under development!
 
 ## Questions & Issues
 Please post questions and issues related to **`SiRCleR`** functions on the `Issues`  section of this GitHub repository.
