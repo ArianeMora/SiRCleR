@@ -29,13 +29,13 @@
 #' @export
 toy_data <- function() {
   # Read the .csv files
-  Methylation <- system.file("data", "rna_DE_Stage IV_sircle_renamed-cols.csv", package = "SiRCleR")
+  Methylation <- system.file("data", "rna_DE_Stage IV_sircle_renamed-cols.csv", package = "sircle")
   Methylation<- read.csv(Methylation, check.names=FALSE)
 
-  RNA <- system.file("data", "rna_DE_Stage IV_sircle_renamed-cols.csv", package = "SiRCleR")
+  RNA <- system.file("data", "rna_DE_Stage IV_sircle_renamed-cols.csv", package = "sircle")
   RNA<- read.csv( RNA, check.names=FALSE)
 
-  Protein <-system.file("data", "prot_DE_Stage IV_sircle.csv", package = "SiRCleR")
+  Protein <-system.file("data", "prot_DE_Stage IV_sircle.csv", package = "sircle")
   Protein<- read.csv( Protein, check.names=FALSE)
 
   # Return the toy data into environment
