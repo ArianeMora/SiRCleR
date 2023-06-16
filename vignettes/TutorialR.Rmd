@@ -24,7 +24,7 @@ library(sircle)
 Load example data:
 
 ```{r}
-sircle::toy_data()
+#toy_data()
 
 
 
