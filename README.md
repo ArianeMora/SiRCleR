@@ -8,14 +8,9 @@ Lastly, to compare patient’s subsets (e.g. based on stage), we found that inte
 ![](https://www.biorxiv.org/content/biorxiv/early/2022/07/04/2022.07.02.498058/F6.large.jpg?width=800&height=600&carousel=1)
 
 **`sircleRCM` functions create the SiRCle Regulatory Clustering Model (RCM) based on logical regulatory rules, which in turn can be used for further downstream analysis:**
-* SiRCle Regulatory Clustering Model Visualisation (**`sircleRCMVis`**)
-* Over Representation Analysis (**`sircleORA`**) on the individual SiRCle clusters
-* Fishers Exact Test (**`sircleFET`**) for data overlay on the individual SiRCle clusters
-* Transcription Factor (**`sircleTF`**) analysis based on Dorothea regulons or motif analysis on the individual SiRCle clusters and TF visualisation (**`sircleTFVis`**)
-* Variational Autoencoder (**`sircleVAE`**) statistics
-
-[![PyPI](https://img.shields.io/pypi/v/scircm)](https://pypi.org/project/scircm/)
-
+* Over Representation Analysis (**`sircleORA`**) on the individual SiRCle clusters using GO-term pathways or your own pathway list of choice, which returns the results DFs and Visualisations of the results
+* Transcription Factor (**`sircleTF`**) analysis using over representation analysis (ORA) on the individual SiRCle clusters using amy TF regulon input (e.g. dorothea or FIMO) and returns the results and TF visualisation
+* Variational Autoencoder statistics currently only runs with the python package [![PyPI](https://img.shields.io/pypi/v/scircm)](https://pypi.org/project/scircm/)
 
 ## Tutorial
 See R tutorial in the **`vignettes`** folder, which includes a tutorial and data to try the functions.\
@@ -26,8 +21,7 @@ If you want to read more about how SiRCle works, please check out our [preprint]
 1. Install Rtools if you haven't done this yet, using the appropriate version (e.g.[windows](https://cran.r-project.org/bin/windows/Rtools/) or [macOS](https://cran.r-project.org/bin/macosx/tools/)).
 2. Install the latest development version from GitHub with: **`SiRCleR package`** direcly in R:
     ```
-    #install.packages("devtools")
-    devtools::install_github("https://github.com/ArianeMora/SiRCleR/tree/v1.0.1")
+    devtools::install_github("https://github.com/ArianeMora/SiRCleR")
     library(sircle)
     ```
 ### Dependencies 
