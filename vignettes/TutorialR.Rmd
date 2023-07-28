@@ -22,22 +22,20 @@ library(sircle)
 
 # Input Data
 Load example data:
-
 ```{r}
-#toy_data()
-
-
-
-
-# geneId <- 'ensembl_gene_id'
-#"logFC_rna", "padj_rna", "CpG_Beta_diff", "padj_meth", "logFC_protein", "padj_protein",
-
+# Load the data from inst/extdata within the SiRCleR package:
+DNAmeth <- readRDS(system.file("extdata", "DNAMethylation.rds", package="SiRCleR"))
+mRNA <- readRDS(system.file("extdata", "RNAseq.rds", package="SiRCleR"))
+Proteomics <- readRDS(system.file("extdata", "Proteomics.rds", package="SiRCleR"))
 ```
 
 # Run SiRCleR functions
 ## Regulatory Clustering Model (RCM)
 
+
 ## Pathway analysis on SiRCle clusters
+
+
 
 ## TF analysis on SiRCle clusters
 
