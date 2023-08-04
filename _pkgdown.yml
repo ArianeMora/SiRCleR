@@ -21,6 +21,8 @@ navbar:
       menu:
       - text: TutorialR
         href: articles/TutorialR.html
+      - text: Manuscript Overview
+        href: articles/Manuscript.html
     #customize intro:
     intro:
       text: Introduction
