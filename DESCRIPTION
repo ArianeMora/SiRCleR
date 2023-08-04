@@ -2,7 +2,7 @@ Package: SiRCleR
 Title: Signature Regulatory Clustering
 Version: 0.0.0.9000
 Authors@R: c(
-    person("Ariane", "Mora", , "ariane.n.mora@gmail.com", role = c("aut", "cre")),
+    person("Ariane", "Mora", , "ariane.n.mora@gmail.com", role = "aut"),
     person("Christina", "Schmidt", , "christina.schmidt@uni-heidelberg.de", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-3867-0881")),
     person("Brad", "Balderson", role = "aut"),
