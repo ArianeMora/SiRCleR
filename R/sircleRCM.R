@@ -38,12 +38,12 @@
 #' @param proteinValueCutoff \emph{Optional: } LogFoldchange cutoff for Protein data \strong{Default=0.3}
 #' @param methPadjCutoff \emph{Optional: } Padjusted cutoff for DNA methylation data \strong{Default=0.05}
 #' @param methDiffCutoff \emph{Optional: } DNA Methylation difference cutoff for DNA methylation \strong{Default=10}
-#' @param backgroundMethod \emph{Optional: } Background method (NEED Description for each one here) \strong{Default="P|(M&R)"}
-#' @param outputFileName \emph{Optional: } Output filename \strong{Default=SiRCle_RCM.csv}
+#' @param backgroundMethod \emph{Optional: } Background methods: "P|(M&R)", "P|M|R", "P|R", "P&R", "P&M&R", "(P&M)|(P&R)|(M&R)", "(P&M)|(P&R)" or "*". For details on the methods, please check https://github.com/ArianeMora/SiRCleR/blob/main/vignettes/SiRCle_RCM_Notebook.Rmd \strong{Default="P|(M&R)"}
+#' @param outputFileName \emph{Optional: } Output filename \strong{Default="SiRCle_RCM"}
 #' @return rcm an instance of the rcm package
 #' @export
 #'
-sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPadjCol="padj", methValueCol="Diff", methPadjCol="padj", proteinValueCol="Log2FC", proteinPadjCol="padj", rna_padj_cutoff= 0.05, prot_padj_cutoff = 0.05, meth_padj_cutoff = 0.05,rna_FC_cutoff= 1, prot_FC_cutoff = 0.5, meth_Diff_cutoff = 0.1, backgroundMethod, OutputFileName = "Sircle_RCM.csv"){
+sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPadjCol="padj", methValueCol="Diff", methPadjCol="padj", proteinValueCol="Log2FC", proteinPadjCol="padj", rna_padj_cutoff= 0.05, prot_padj_cutoff = 0.05, meth_padj_cutoff = 0.05,rna_FC_cutoff= 1, prot_FC_cutoff = 0.5, meth_Diff_cutoff = 0.1, backgroundMethod, OutputFileName = "Sircle_RCM"){
   #Import the data:
   proteinDF <- as.data.frame(protFile)%>%
      dplyr::rename("geneID"=paste(geneID),
@@ -492,7 +492,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
 #' @param rnaLogFCCutoff \emph{Optional: } LogFoldchange cutoff for RNAseq data \strong{Default=0.5}
 #' @param proteinPadjCutoff \emph{Optional: } Padjusted cutoff for Protein data \strong{Default=0.05}
 #' @param proteinValueCutoff \emph{Optional: } LogFoldchange cutoff for Protein data \strong{Default=0.3}
-#' @param backgroundMethod \emph{Optional: } Background method (NEED Description for each one here) \strong{Default="P&R"}
+#' @param backgroundMethod \emph{Optional: } Background methods: "P|R", "P&R", "P" , "R", or "*". For details on the methods, please check https://github.com/ArianeMora/SiRCleR/blob/main/vignettes/SiRCle_RCM_Notebook.Rmd \strong{Default="P&R"}
 #' @param outputFileName \emph{Optional: } Output filename \strong{Default=SiRCle_RCM.csv}
 #' @return rcm an instance of the rcm package
 #' @export
@@ -756,7 +756,7 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
 #' @param Cond1LogFCCutoff \emph{Optional: } LogFoldchange cutoff for Cond1 data \strong{Default=0.5}
 #' @param Cond2FilePadjCutoff \emph{Optional: } Padjusted cutoff for Cond2File data \strong{Default=0.05}
 #' @param Cond2FileCutoff \emph{Optional: } LogFoldchange cutoff for Cond2File data \strong{Default=0.5}
-#' @param backgroundMethod \emph{Optional: } Background method C1|C2, C1&C2, C2, C1 or * \strong{Default="C1&C2"}
+#' @param backgroundMethod \emph{Optional: } Background method "C1|C2", "C1&C2", "C2", "C1" or "*". For details on the method check https://github.com/ArianeMora/SiRCleR/blob/main/vignettes/SiRCle_RCM_Notebook.Rmd \strong{Default="C1&C2"}
 #' @param outputFileName \emph{Optional: } Output filename \strong{Default=SiRCle_RCM.csv}
 #' @return rcm an instance of the rcm package
 #' @export
