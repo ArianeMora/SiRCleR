@@ -17,11 +17,11 @@ sircleORA_Enrich(
   maxGSSize = 1000,
   Plot_p.adj = 0.2,
   Plot_Percentage = 10,
-  outputFolder = ""
+  OutputFileName = ""
 )
 }
 \arguments{
-\item{filename}{Path to the input file}
+\item{filename}{Input file}
 
 \item{regLabels}{\emph{Optional: } regLabels The label of the column with the regulatory labels \strong{default: "RegulatoryLabels"}}
 
@@ -42,6 +42,8 @@ sircleORA_Enrich(
 \item{Plot_p.adj}{\emph{Optional: } q value cutoff from ORA that should be plotted \strong{default: 0.2}}
 
 \item{Plot_Percentage}{\emph{Optional: } Percentage of genes that are detected of a pathway \strong{default: 10}}
+
+\item{OutputFileName}{Output filename}
 
 \item{RemoveBackgroundGenes\emph{Optional:}{} If TRUE, genes that fall into background based on the choosen Background method for SiRCle RCM are removed from the universe. \strong{default: "TRUE"}}
 }

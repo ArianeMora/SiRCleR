@@ -31,7 +31,7 @@ sircleRCM_2Cond(
 
 \item{Cond2PadjCol}{Column name of protein p adjusted value in Cond2File}
 
-\item{backgroundMethod}{\emph{Optional: } Background method C1|C2, C1&C2, C2, C1 or * \strong{Default="C1&C2"}}
+\item{backgroundMethod}{\emph{Optional: } Background method "C1|C2", "C1&C2", "C2", "C1" or "*". For details on the method check https://github.com/ArianeMora/SiRCleR/blob/main/vignettes/SiRCle_RCM_Notebook.Rmd \strong{Default="C1&C2"}}
 
 \item{Cond1File}{DF for your data (results from e.g. DeSeq2)}
 

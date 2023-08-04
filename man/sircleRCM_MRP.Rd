@@ -22,7 +22,7 @@ sircleRCM_MRP(
   prot_FC_cutoff = 0.5,
   meth_Diff_cutoff = 0.1,
   backgroundMethod,
-  OutputFileName = "Sircle_RCM.csv"
+  OutputFileName = "Sircle_RCM"
 )
 }
 \arguments{
@@ -44,7 +44,7 @@ sircleRCM_MRP(
 
 \item{proteinPadjCol}{Column name of protein p adjusted value in proteinFile}
 
-\item{backgroundMethod}{\emph{Optional: } Background method (NEED Description for each one here) \strong{Default="P|(M&R)"}}
+\item{backgroundMethod}{\emph{Optional: } Background methods: "P|(M&R)", "P|M|R", "P|R", "P&R", "P&M&R", "(P&M)|(P&R)|(M&R)", "(P&M)|(P&R)" or "*". For details on the methods, please check https://github.com/ArianeMora/SiRCleR/blob/main/vignettes/SiRCle_RCM_Notebook.Rmd \strong{Default="P|(M&R)"}}
 
 \item{proteinFile}{DF of you Protein data (results from DeSeq2 and also your normalised expression counts)}
 
@@ -60,7 +60,7 @@ sircleRCM_MRP(
 
 \item{methDiffCutoff}{\emph{Optional: } DNA Methylation difference cutoff for DNA methylation \strong{Default=10}}
 
-\item{outputFileName}{\emph{Optional: } Output filename \strong{Default=SiRCle_RCM.csv}}
+\item{outputFileName}{\emph{Optional: } Output filename \strong{Default="SiRCle_RCM"}}
 }
 \value{
 rcm an instance of the rcm package

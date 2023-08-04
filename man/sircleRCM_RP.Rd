@@ -33,7 +33,7 @@ sircleRCM_RP(
 
 \item{proteinPadjCol}{Column name of protein p adjusted value in proteinFile}
 
-\item{backgroundMethod}{\emph{Optional: } Background method (NEED Description for each one here) \strong{Default="P&R"}}
+\item{backgroundMethod}{\emph{Optional: } Background methods: "P|R", "P&R", "P" , "R", or "*". For details on the methods, please check https://github.com/ArianeMora/SiRCleR/blob/main/vignettes/SiRCle_RCM_Notebook.Rmd \strong{Default="P&R"}}
 
 \item{proteinFile}{DF of your Protein data (results from DeSeq2 and also your normalised expression counts)}
 
