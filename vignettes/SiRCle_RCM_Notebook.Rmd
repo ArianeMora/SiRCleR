@@ -1,18 +1,20 @@
 ---
-title: "SiRCle clustering Notebook"
-author: "Christina Schmidt & Ariane Mora"
-output:
+title: "SiRCle RCM Rules"
+author:
+  - name: Ariane Mora
+  - name: Christina Schmidt
+output: 
   html_document:
-    theme: flatly
-    toc: yes
+    self_contained: true
+    toc: true
+    toc_float: true
     toc_depth: 3
-    toc_float: yes
-  pdf_document:
-    toc: yes
-    toc_depth: '3'
-editor_options:
-  chunk_output_type: console
+vignette: >
+  %\VignetteIndexEntry{SiRCle Method}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
+
 
 ```{r, include=FALSE, warning=FALSE, message=FALSE}
 library(tidyverse) # used for data manipulation
@@ -21,18 +23,12 @@ library(kableExtra) # used for table
 library(dplyr)
 ```
 
-\
-<button type="button" class="btn btn-link disabled" >[**Browse source code**](https://github.com/ArianeMora/SiRCleR/tree/main)</button>
-
-<div class="progress progress-striped active">
-  <div class="progress-bar progress-bar" style="width: 100%"></div>
-</div>
-
 # ***SiRCle Regulatory Clustering Model***
 <div class="progress progress-striped active">
   <div class="progress-bar progress-bar" style="width: 100%"></div>
 </div>
-
+\
+\
 This notebook is meant as a guide for choosing the settings for the Signature Regulatory Clustering (SiRCle) dependent on the biological question of interest. This guide is divided into three main chapters that give an overview on the SiRcle method, each covering one of the main settings in the `sircleRCM() functions` (Regulatory Clustering Method) namely the "Background method (BG)", the "Regulation Grouping (RG)" and the thresholds/cutoffs of the input data.\
 \
 ***sircleRCM_MRP()***\

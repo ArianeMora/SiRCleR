@@ -1,0 +1,37 @@
+---
+title: "Manuscript"
+author:
+  - name: Ariane Mora
+  - name: Christina Schmidt
+output: 
+  html_document:
+    self_contained: true
+    toc: true
+    toc_float: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{Manuscript}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Overview
+***SiRCle*** has first been released as a biorxiv preprint and since then we have enhanced the method further.
+The **S**ignature **R**egulatory **Cl**ust**e**ring (SiRCle) method was first developed in 2022 to integrate DNA methylation, RNA-seq and proteomics data at the gene level to deconvolute the association between dysregulation within and across possible regulatory layers (DNA methylation, transcription and/or translation). The results of the study were published on biorxiv in a shared effort by [Mora & Schmidt et. al.](https://www.biorxiv.org/content/10.1101/2022.07.02.498058v1) and you can find the detailed code on our [website](https://arianemora.github.io/SiRCle_multiomics_integration/#) or on our [SiRCleManuscript](https://github.com/ArianeMora/SiRCle_multiomics_integration) GitHub repository.\
+\
+![The SiRCle method integrates DNA methylation, RNA-seq and proteomics data at the gene level to deconvolute the association between dysregulation within and across possible regulatory layers (DNA methylation, transcription and/or translation).Based on logical regulatory rules, `sircleRCM`, genes are grouped in SiRCle clusters based on the layer (DNA methylation, transcription and/or translation) where dys-regulation first occurs. Using the output of `sircleRCM`, the SiRCle clusters, one can find the primary biological processes altered by applying Over Representation Analysis (ORA) (**`sircleORA`**) and the drivers behind it using Transcription Factor (TF) analysis (**`sircleTF`**). Lastly, to compare patient’s subsets (e.g. based on stage), we found that integrating across the data layers prior to performing differential analysis and biological enrichment better captures the biological signal. Hence we use a variational autoencoder (VAE) to learn gene-wise relationships across the three data layers to obtain an integrated value for each gene (**`sircleVAE`**). Unsing the integarted value we next perform a Mann-Whitney U test to identify genes with a significant integrated difference between the patient's groups.
+](https://www.biorxiv.org/content/biorxiv/early/2022/07/04/2022.07.02.498058/F6.large.jpg?width=800&height=600&carousel=1)
+\
+\
+We are currently undergoing revisions in a peer-revied journal, so stay tuned for the updates to follow here. 
+
+
+
+
+
+
+
+
+
+
+
