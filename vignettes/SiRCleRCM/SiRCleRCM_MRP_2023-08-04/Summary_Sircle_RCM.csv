@@ -1,0 +1,87 @@
+"Regulation Grouping","SiRCle cluster Name","Number of Genes"
+"RG1_All","Background = FALSE",7170
+"RG1_All","Hypermethylation + RNA DOWN + Protein DOWN",202
+"RG1_All","Hypermethylation + RNA DOWN + Protein UP",1
+"RG1_All","Hypermethylation + RNA DOWN + Protein Undetected",417
+"RG1_All","Hypermethylation + RNA DOWN + Protein not-significant",13
+"RG1_All","Hypermethylation + RNA DOWN + Protein significant-negative",43
+"RG1_All","Hypermethylation + RNA DOWN + Protein significant-positive",7
+"RG1_All","Hypermethylation + RNA No change + Protein DOWN",266
+"RG1_All","Hypermethylation + RNA No change + Protein UP",55
+"RG1_All","Hypermethylation + RNA No change + Protein Undetected",1625
+"RG1_All","Hypermethylation + RNA No change + Protein not-significant",340
+"RG1_All","Hypermethylation + RNA No change + Protein significant-negative",503
+"RG1_All","Hypermethylation + RNA No change + Protein significant-positive",684
+"RG1_All","Hypermethylation + RNA UP + Protein UP",43
+"RG1_All","Hypermethylation + RNA UP + Protein Undetected",286
+"RG1_All","Hypermethylation + RNA UP + Protein not-significant",8
+"RG1_All","Hypermethylation + RNA UP + Protein significant-negative",6
+"RG1_All","Hypermethylation + RNA UP + Protein significant-positive",26
+"RG1_All","Hypomethylation + RNA DOWN + Protein DOWN",165
+"RG1_All","Hypomethylation + RNA DOWN + Protein UP",3
+"RG1_All","Hypomethylation + RNA DOWN + Protein Undetected",563
+"RG1_All","Hypomethylation + RNA DOWN + Protein not-significant",22
+"RG1_All","Hypomethylation + RNA DOWN + Protein significant-negative",26
+"RG1_All","Hypomethylation + RNA DOWN + Protein significant-positive",12
+"RG1_All","Hypomethylation + RNA No change + Protein DOWN",309
+"RG1_All","Hypomethylation + RNA No change + Protein UP",139
+"RG1_All","Hypomethylation + RNA No change + Protein Undetected",2069
+"RG1_All","Hypomethylation + RNA No change + Protein not-significant",413
+"RG1_All","Hypomethylation + RNA No change + Protein significant-negative",465
+"RG1_All","Hypomethylation + RNA No change + Protein significant-positive",929
+"RG1_All","Hypomethylation + RNA UP + Protein DOWN",9
+"RG1_All","Hypomethylation + RNA UP + Protein UP",378
+"RG1_All","Hypomethylation + RNA UP + Protein Undetected",982
+"RG1_All","Hypomethylation + RNA UP + Protein not-significant",46
+"RG1_All","Hypomethylation + RNA UP + Protein significant-negative",28
+"RG1_All","Hypomethylation + RNA UP + Protein significant-positive",128
+"RG1_All","Methylation No Change + RNA DOWN + Protein DOWN",207
+"RG1_All","Methylation No Change + RNA DOWN + Protein UP",2
+"RG1_All","Methylation No Change + RNA DOWN + Protein Undetected",1
+"RG1_All","Methylation No Change + RNA DOWN + Protein not-significant",10
+"RG1_All","Methylation No Change + RNA DOWN + Protein significant-negative",39
+"RG1_All","Methylation No Change + RNA DOWN + Protein significant-positive",5
+"RG1_All","Methylation No Change + RNA No change + Protein DOWN",310
+"RG1_All","Methylation No Change + RNA No change + Protein UP",100
+"RG1_All","Methylation No Change + RNA No change + Protein Undetected",14
+"RG1_All","Methylation No Change + RNA No change + Protein not-significant",539
+"RG1_All","Methylation No Change + RNA No change + Protein significant-negative",714
+"RG1_All","Methylation No Change + RNA No change + Protein significant-positive",1091
+"RG1_All","Methylation No Change + RNA UP + Protein DOWN",9
+"RG1_All","Methylation No Change + RNA UP + Protein UP",122
+"RG1_All","Methylation No Change + RNA UP + Protein Undetected",3
+"RG1_All","Methylation No Change + RNA UP + Protein not-significant",11
+"RG1_All","Methylation No Change + RNA UP + Protein significant-negative",7
+"RG1_All","Methylation No Change + RNA UP + Protein significant-positive",71
+"RG2_Changes","Background = FALSE",7170
+"RG2_Changes","MDE",378
+"RG2_Changes","MDE_TMDS",1193
+"RG2_Changes","MDS",202
+"RG2_Changes","MDS_TMDE",481
+"RG2_Changes","None",9386
+"RG2_Changes","TMDE",294
+"RG2_Changes","TMDS",885
+"RG2_Changes","TPDE",165
+"RG2_Changes","TPDE_TMDS",427
+"RG2_Changes","TPDS",372
+"RG2_Changes","TPDS_TMDE",683
+"RG3_Protein","Background = FALSE",7170
+"RG3_Protein","MDE",1488
+"RG3_Protein","MDS",662
+"RG3_Protein","None",9496
+"RG3_Protein","TMDE",324
+"RG3_Protein","TMDS",944
+"RG3_Protein","TPDE",551
+"RG3_Protein","TPDS",1001
+"RG4_Detection","Background = FALSE",7170
+"RG4_Detection","MDE",1488
+"RG4_Detection","MDE_TMDS",83
+"RG4_Detection","MDS",662
+"RG4_Detection","MDS_TMDE",21
+"RG4_Detection","None",9386
+"RG4_Detection","TMDE",294
+"RG4_Detection","TMDS",885
+"RG4_Detection","TPDE",551
+"RG4_Detection","TPDE_TMDS",41
+"RG4_Detection","TPDS",438
+"RG4_Detection","TPDS_TMDE",617
