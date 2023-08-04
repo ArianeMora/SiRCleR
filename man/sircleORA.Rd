@@ -7,7 +7,7 @@
 sircleORA(
   filename,
   entrezId,
-  regLabels = "RegulatoryLabels",
+  regLabels = "RG3_Protein",
   emptyRegLabel = "",
   RemoveBackgroundGenes = "TRUE",
   fileType = "pdf",
@@ -24,7 +24,7 @@ sircleORA(
 
 \item{entrezId}{Column name for the entrez ID}
 
-\item{regLabels}{\emph{Optional: } regLabels The label of the column with the regulatory labels \strong{default: "RegulatoryLabels"}}
+\item{regLabels}{\emph{Optional: } regLabels The label of the column with the regulatory labels \strong{default: "RG3_Protein"}}
 
 \item{emptyRegLabel}{\emph{Optional: } emptyRegLabel The label of the empty regulatory group \strong{default: ""}}
 
