@@ -95,11 +95,13 @@ sircleORA <- function(filename, entrezId, regLabels="RG3_Protein", emptyRegLabel
       Dotplot <- enrichplot::dotplot(clusterGo, showCategory=showCatagory) +
         ggtitle(paste("Dotplot ", g, sep=""))
       ggsave(file=paste("SiRCleRCM/SiRCleRCM_ORA_", Sys.Date(), "/", OutputFileName,"_Dotplot_", g, ".", fileType, sep=""), plot=Dotplot, width=10, height=8)
+      plot(Dotplot)
 
       x2 <- enrichplot::pairwise_termsim(clusterGo)
       Emapplot <- enrichplot::emapplot(x2, pie_scale=1.5, layout = "nicely")+
         ggtitle(paste("Emapplot ", g, sep=""))
       ggsave(file=paste("SiRCleRCM/SiRCleRCM_ORA_", Sys.Date(), "/", OutputFileName,"_Emapplot_", g, ".", fileType, sep="" ), plot=Emapplot, width=10, height=8)
+      plot(Emapplot)
 
       Heatplot <- enrichplot::heatplot(clusterGo,showCategory=showCatagory) +
         theme(axis.text.x =element_text(size=5), axis.text.y =element_text(size=8,face="bold"), axis.title=element_text(size=12,face="bold"))+
