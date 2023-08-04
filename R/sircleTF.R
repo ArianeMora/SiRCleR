@@ -48,9 +48,9 @@ sircleORA_TF <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="
   ## ------------ Create Folder ----------##
   #Create Folder, Safe file :
   SiRCleRCM_results_folder = paste(getwd(), "/SiRCleRCM",  sep="")
-  if (!dir.exists(SiRCleRCM_results_folder)) {dir.create(SiRCleRCM_results_folder)}#
+  if (!dir.exists(SiRCleRCM_results_folder)){dir.create(SiRCleRCM_results_folder)}#
   SiRCleRCM_TF_results_folder = paste(SiRCleRCM_results_folder, "/SiRCleRCM_TF_",Sys.Date(), sep="")
-  if (!dir.exists(SiRCleRCM_TF_results_folder)) {dir.create(SiRCleRCM_TF_results_folder)}  # check and create folder
+  if (!dir.exists(SiRCleRCM_TF_results_folder)){dir.create(SiRCleRCM_TF_results_folder)}  # check and create folder
 
   ## ------------ Run ----------- ##
   # open the data
@@ -114,7 +114,7 @@ sircleORA_TF <- function(filename, regLabels="RegulatoryLabels", emptyRegLabel="
       clusterGoSummary_Select$Description <- clusterGoSummary_Select$ID
       clusterGoSummary_Select<-clusterGoSummary_Select[,c(1,12,2:9)]
       #Make the Plots
-      if (!(dim(clusterGoSummary_Select)[1] == 0)) {#exclude df's that have no observations
+      if (!(dim(clusterGoSummary_Select)[1] == 0)){#exclude df's that have no observations
         clusterGo@result <- clusterGoSummary_Select
         #1. Dotplot:
         Dotplot <-  enrichplot::dotplot(clusterGo, showCategory=nrow(clusterGoSummary_Select)) +

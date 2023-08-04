@@ -37,7 +37,7 @@
 #' @export
 
 sircleORA <- function(filename, entrezId, regLabels="RG3_Protein", emptyRegLabel="", RemoveBackgroundGenes="TRUE", fileType="pdf",
-                           minGSSize=10, qvalueCutoff=0.2, pvalueCutoff=0.05, showCatagory=30, OutputFileName='', Organism="Human") {
+                           minGSSize=10, qvalueCutoff=0.2, pvalueCutoff=0.05, showCatagory=30, OutputFileName='', Organism="Human"){
   ## ------------ Setup and installs ----------- ##
   packages <- c("org.Hs.eg.db", "org.Mm.eg.db", "clusterProfiler", "svglite", "enrichplot")
   install.packages(setdiff(packages, rownames(installed.packages())))
@@ -46,9 +46,9 @@ sircleORA <- function(filename, entrezId, regLabels="RG3_Protein", emptyRegLabel
   ## ------------ Create Folder ----------##
   #Create Folder, Safe file :
   SiRCleRCM_results_folder = paste(getwd(), "/SiRCleRCM",  sep="")
-  if (!dir.exists(SiRCleRCM_results_folder)) {dir.create(SiRCleRCM_results_folder)}#
+  if (!dir.exists(SiRCleRCM_results_folder)){dir.create(SiRCleRCM_results_folder)}#
   SiRCleRCM_ORA_results_folder = paste(SiRCleRCM_results_folder, "/SiRCleRCM_ORA_",Sys.Date(), sep="")
-  if (!dir.exists(SiRCleRCM_ORA_results_folder)) {dir.create(SiRCleRCM_ORA_results_folder)}  # check and create folder
+  if (!dir.exists(SiRCleRCM_ORA_results_folder)){dir.create(SiRCleRCM_ORA_results_folder)}  # check and create folder
 
   ## ------------ Run ----------- ##
   # open the data
@@ -91,7 +91,7 @@ sircleORA <- function(filename, entrezId, regLabels="RG3_Protein", emptyRegLabel
     clusterGoSummary <- data.frame(clusterGo)
     write.csv(clusterGoSummary, paste("SiRCleRCM/SiRCleRCM_ORA_", Sys.Date(), "/", OutputFileName,"_",g, ".csv", sep=""), row.names = FALSE)#Export the ORA results as .csv
 
-    if (!(dim(clusterGoSummary)[1] == 0)) {#exclude df's that have no observations
+    if (!(dim(clusterGoSummary)[1] == 0)){#exclude df's that have no observations
       Dotplot <- enrichplot::dotplot(clusterGo, showCategory=showCatagory) +
         ggtitle(paste("Dotplot ", g, sep=""))
       ggsave(file=paste("SiRCleRCM/SiRCleRCM_ORA_", Sys.Date(), "/", OutputFileName,"_Dotplot_", g, ".", fileType, sep=""), plot=Dotplot, width=10, height=8)
@@ -140,9 +140,9 @@ sircleORA_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLab
   ## ------------ Create Folder ----------##
   #Create Folder, Safe file :
   SiRCleRCM_results_folder = paste(getwd(), "/SiRCleRCM",  sep="")
-  if (!dir.exists(SiRCleRCM_results_folder)) {dir.create(SiRCleRCM_results_folder)}#
+  if (!dir.exists(SiRCleRCM_results_folder)){dir.create(SiRCleRCM_results_folder)}#
   SiRCleRCM_ORA_results_folder = paste(SiRCleRCM_results_folder, "/SiRCleRCM_ORA_",Sys.Date(), sep="")
-  if (!dir.exists(SiRCleRCM_ORA_results_folder)) {dir.create(SiRCleRCM_ORA_results_folder)}  # check and create folder
+  if (!dir.exists(SiRCleRCM_ORA_results_folder)){dir.create(SiRCleRCM_ORA_results_folder)}  # check and create folder
 
   ## ------------ Run ----------- ##
   # open the data
@@ -197,7 +197,7 @@ sircleORA_Enrich <- function(filename, regLabels="RegulatoryLabels", emptyRegLab
         subset(p.adjust <= Plot_p.adj & Percentage_of_Pathway_detected >= Plot_Percentage)
       rownames(clusterGoSummary_Select)<-clusterGoSummary_Select$ID
       #Make the Plots
-      if (!(dim(clusterGoSummary_Select)[1] == 0)) {#exclude df's that have no observations
+      if (!(dim(clusterGoSummary_Select)[1] == 0)){#exclude df's that have no observations
         clusterGo@result <- clusterGoSummary_Select[,1:9]
         #1. Dotplot:
         Dotplot <-  enrichplot::dotplot(clusterGo, showCategory=nrow(clusterGoSummary_Select)) +
