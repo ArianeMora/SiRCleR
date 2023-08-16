@@ -23,6 +23,7 @@ The latest development version of ***SiRCleR package*** can be install from [Git
 
 #For the latest development version use:
 devtools::install_github("https://github.com/ArianeMora/SiRCleR")
+
 library(SiRCleR)
 
 #load dependencies:
