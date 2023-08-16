@@ -30,5 +30,4 @@ Imports:
     clusterProfiler,
     enrichplot,
     org.Hs.eg.db,
-    org.Mm.eg.db,
     tidyverse
