@@ -39,7 +39,7 @@
 sircleORA <- function(filename, entrezId, regLabels="RG3_Protein", emptyRegLabel="", RemoveBackgroundGenes="TRUE", fileType="pdf",
                            minGSSize=10, qvalueCutoff=0.2, pvalueCutoff=0.05, showCatagory=30, OutputFileName='', Organism="Human"){
   ## ------------ Setup and installs ----------- ##
-  packages <- c("org.Hs.eg.db", "clusterProfiler", "svglite", "enrichplot")
+  packages <- c("org.Hs.eg.db","org.Mm.eg.db" ,"clusterProfiler", "svglite", "enrichplot")
   install.packages(setdiff(packages, rownames(installed.packages())))
   library(svglite)
 
