@@ -65,7 +65,7 @@ Sircle_RCM_E <- Sircle_RCM %>%
 SiRCleR::sircleORA(filename=Sircle_RCM_E,
                    entrezId="entrezgene_id",
                    regLabels = "RG3_Protein",
-                   emptyRegLabel = "",
+                   emptyRegLabel = "None",
                    RemoveBackgroundGenes = "TRUE",
                    fileType = "pdf",
                    minGSSize = 10,
