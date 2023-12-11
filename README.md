@@ -28,21 +28,23 @@ signal. Hence we use a variational autoencoder (VAE) to learn gene-wise
 relationships across the three data layers to obtain an integrated value
 for each gene (**`sircleVAE`**). Unsing the integarted value we next
 perform a Mann-Whitney U test to identify genes with a significant
-integrated difference between the patient’s groups.
-
-![](https://www.biorxiv.org/content/biorxiv/early/2022/07/04/2022.07.02.498058/F6.large.jpg?width=800&height=600&carousel=1)
-
+integrated difference between the patient’s groups.  
+  
 **`sircleRCM` functions create the SiRCle Regulatory Clustering Model
 (RCM) based on logical regulatory rules, which in turn can be used for
-further downstream analysis:** \* Over Representation Analysis
-(**`sircleORA`**) on the individual SiRCle clusters using GO-term
-pathways or your own pathway list of choice, which returns the results
-DFs and Visualisations of the results \* Transcription Factor
-(**`sircleTF`**) analysis using over representation analysis (ORA) on
-the individual SiRCle clusters using amy TF regulon input (e.g. dorothea
-or FIMO) and returns the results and TF visualisation \* Variational
-Autoencoder statistics currently only runs with the python package
-[![PyPI](https://img.shields.io/pypi/v/scircm)](https://pypi.org/project/scircm/)
+further downstream analysis:**
+
+- Over Representation Analysis (**`sircleORA`**) on the individual
+  SiRCle clusters using GO-term pathways or your own pathway list of
+  choice, which returns the results DFs and Visualisations of the
+  results
+- Transcription Factor (**`sircleTF`**) analysis using over
+  representation analysis (ORA) on the individual SiRCle clusters using
+  amy TF regulon input (e.g. dorothea or FIMO) and returns the results
+  and TF visualisation
+- Variational Autoencoder statistics currently only runs with the python
+  package
+  [![PyPI](https://img.shields.io/pypi/v/scircm)](https://pypi.org/project/scircm/)
 
 ## Tutorial
 
@@ -59,7 +61,7 @@ this yet, using the appropriate version
 [macOS](https://cran.r-project.org/bin/macosx/tools/)). 2. Install the
 latest development version from GitHub with: **`SiRCleR package`**
 direcly in R:
-`devtools::install_github("https://github.com/ArianeMora/SiRCleR")     library(sircle)`
+`devtools::install_github("https://github.com/ArianeMora/SiRCleR")     library(SiRCleR)`
 \### Dependencies If you are using the visualisations for the over
 representation analysis you will need to install the following tools and
 cite them.  
@@ -103,7 +105,7 @@ the `Issues` section of this GitHub repository.
 
 If you want to reproduce the results of of our
 [publication](https://doi.org/10.1101/2022.07.02.498058), please use the
-python package verison found here:
+python package version found here:
 <https://doi.org/10.1101/2022.07.02.498058>
 
 ## Citation

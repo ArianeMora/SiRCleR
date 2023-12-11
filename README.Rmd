@@ -26,8 +26,9 @@ Using the output of `sircleRCM`, the SiRCle clusters, one can find the primary b
 Lastly, to compare patient’s subsets (e.g. based on stage), we found that integrating across the data layers prior to performing differential analysis and biological enrichment better captures the biological signal. Hence we use a variational autoencoder (VAE) to learn gene-wise relationships across the three data layers to obtain an integrated value for each gene (**`sircleVAE`**). Unsing the integarted value we next perform a Mann-Whitney U test to identify genes with a significant integrated difference between the patient's groups.\
 \
 **`sircleRCM` functions create the SiRCle Regulatory Clustering Model (RCM) based on logical regulatory rules, which in turn can be used for further downstream analysis:**
-* Over Representation Analysis (**`sircleORA`**) on the individual SiRCle clusters using GO-term pathways or your own pathway list of choice, which returns the results DFs and Visualisations of the results\
-* Transcription Factor (**`sircleTF`**) analysis using over representation analysis (ORA) on the individual SiRCle clusters using amy TF regulon input (e.g. dorothea or FIMO) and returns the results and TF visualisation\
+
+* Over Representation Analysis (**`sircleORA`**) on the individual SiRCle clusters using GO-term pathways or your own pathway list of choice, which returns the results DFs and Visualisations of the results
+* Transcription Factor (**`sircleTF`**) analysis using over representation analysis (ORA) on the individual SiRCle clusters using amy TF regulon input (e.g. dorothea or FIMO) and returns the results and TF visualisation
 * Variational Autoencoder statistics currently only runs with the python package [![PyPI](https://img.shields.io/pypi/v/scircm)](https://pypi.org/project/scircm/)
 
 ## Tutorial
