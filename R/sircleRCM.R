@@ -85,24 +85,24 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
 
   #Assign to Group based on individual Cutoff ("UP", "DOWN", "No Change")
   proteinDF <- proteinDF%>%
-    mutate(Cutoff = case_when(proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol > prot_FC_cutoff ~ 'UP',
-                              proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol < -prot_FC_cutoff ~ 'DOWN',
+    mutate(Cutoff = case_when(proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol >= prot_FC_cutoff ~ 'UP',
+                              proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol <= -prot_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change')) %>%
     mutate(Cutoff_Specific = case_when(Cutoff == "UP" ~ 'UP',
                                        Cutoff == "DOWN" ~ 'DOWN',
-                                       Cutoff == "No Change" & proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol > 0 ~ 'Significant Positive',
-                                       Cutoff == "No Change" & proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol < 0 ~ 'Significant Negative',
+                                       Cutoff == "No Change" & proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol > 0 ~ 'Significant Positive',
+                                       Cutoff == "No Change" & proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol < 0 ~ 'Significant Negative',
                                        Cutoff == "No Change" & proteinDF$PadjCol > prot_padj_cutoff ~ 'Not Significant',
                                        TRUE ~ 'FALSE'))
 
   rnaDF <- rnaDF%>%
-    mutate(Cutoff = case_when(rnaDF$PadjCol < rna_padj_cutoff & rnaDF$ValueCol > rna_FC_cutoff ~ 'UP',
-                              rnaDF$PadjCol < rna_padj_cutoff & rnaDF$ValueCol < -rna_FC_cutoff ~ 'DOWN',
+    mutate(Cutoff = case_when(rnaDF$PadjCol <= rna_padj_cutoff & rnaDF$ValueCol >= rna_FC_cutoff ~ 'UP',
+                              rnaDF$PadjCol <= rna_padj_cutoff & rnaDF$ValueCol <= -rna_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change'))
 
   methDF <- methDF%>%
-    mutate(Cutoff = case_when(methDF$PadjCol < meth_padj_cutoff & methDF$ValueCol > meth_Diff_cutoff ~ 'Hypermethylation',
-                              methDF$PadjCol < meth_padj_cutoff & methDF$ValueCol < -meth_Diff_cutoff ~ 'Hypomethylation',
+    mutate(Cutoff = case_when(methDF$PadjCol <= meth_padj_cutoff & methDF$ValueCol >= meth_Diff_cutoff ~ 'Hypermethylation',
+                              methDF$PadjCol <= meth_padj_cutoff & methDF$ValueCol <= -meth_Diff_cutoff ~ 'Hypomethylation',
                               TRUE ~ 'No Change'))
 
   #Merge the dataframes together: Merge the supplied RNAseq, DNA methylation and proteomics dataframes together.
@@ -528,20 +528,21 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
 
   #Assign to Group based on individual Cutoff ("UP", "DOWN", "No Change")
   proteinDF <- proteinDF%>%
-    mutate(Cutoff = case_when(proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol > prot_FC_cutoff ~ 'UP',
-                              proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol < -prot_FC_cutoff ~ 'DOWN',
+    mutate(Cutoff = case_when(proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol >= prot_FC_cutoff ~ 'UP',
+                              proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol <= -prot_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change')) %>%
     mutate(Cutoff_Specific = case_when(Cutoff == "UP" ~ 'UP',
                                        Cutoff == "DOWN" ~ 'DOWN',
-                                       Cutoff == "No Change" & proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol > 0 ~ 'Significant Positive',
-                                       Cutoff == "No Change" & proteinDF$PadjCol < prot_padj_cutoff & proteinDF$ValueCol < 0 ~ 'Significant Negative',
+                                       Cutoff == "No Change" & proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol > 0 ~ 'Significant Positive',
+                                       Cutoff == "No Change" & proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol < 0 ~ 'Significant Negative',
                                        Cutoff == "No Change" & proteinDF$PadjCol > prot_padj_cutoff ~ 'Not Significant',
                                        TRUE ~ 'FALSE'))
 
   rnaDF <- rnaDF%>%
-    mutate(Cutoff = case_when(rnaDF$PadjCol < rna_padj_cutoff & rnaDF$ValueCol > rna_FC_cutoff ~ 'UP',
-                              rnaDF$PadjCol < rna_padj_cutoff & rnaDF$ValueCol < -rna_FC_cutoff ~ 'DOWN',
+    mutate(Cutoff = case_when(rnaDF$PadjCol <= rna_padj_cutoff & rnaDF$ValueCol >= rna_FC_cutoff ~ 'UP',
+                              rnaDF$PadjCol <= rna_padj_cutoff & rnaDF$ValueCol <= -rna_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change'))
+
 
   #Merge the dataframes together: Merge the supplied RNAseq and proteomics dataframes together.
   ##Add prefix to column names to distinguish the different data types after merge
@@ -792,24 +793,24 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
 
   #Assign to Group based on individual Cutoff ("UP", "DOWN", "No Change")
   Cond2_DF <- Cond2_DF%>%
-    mutate(Cutoff = case_when(Cond2_DF$PadjCol < Cond2_padj_cutoff & Cond2_DF$ValueCol > Cond2_FC_cutoff ~ 'UP',
-                              Cond2_DF$PadjCol < Cond2_padj_cutoff & Cond2_DF$ValueCol < -Cond2_FC_cutoff ~ 'DOWN',
+    mutate(Cutoff = case_when(Cond2_DF$PadjCol <= Cond2_padj_cutoff & Cond2_DF$ValueCol >= Cond2_FC_cutoff ~ 'UP',
+                              Cond2_DF$PadjCol <= Cond2_padj_cutoff & Cond2_DF$ValueCol <= -Cond2_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change')) %>%
     mutate(Cutoff_Specific = case_when(Cutoff == "UP" ~ 'UP',
                                        Cutoff == "DOWN" ~ 'DOWN',
-                                       Cutoff == "No Change" & Cond2_DF$PadjCol < Cond2_padj_cutoff & Cond2_DF$ValueCol > 0 ~ 'Significant Positive',
-                                       Cutoff == "No Change" & Cond2_DF$PadjCol < Cond2_padj_cutoff & Cond2_DF$ValueCol < 0 ~ 'Significant Negative',
+                                       Cutoff == "No Change" & Cond2_DF$PadjCol <= Cond2_padj_cutoff & Cond2_DF$ValueCol > 0 ~ 'Significant Positive',
+                                       Cutoff == "No Change" & Cond2_DF$PadjCol <= Cond2_padj_cutoff & Cond2_DF$ValueCol < 0 ~ 'Significant Negative',
                                        Cutoff == "No Change" & Cond2_DF$PadjCol > Cond2_padj_cutoff ~ 'Not Significant',
                                        TRUE ~ 'FALSE'))
 
   Cond1_DF <-Cond1_DF%>%
-    mutate(Cutoff = case_when(Cond1_DF$PadjCol <Cond1_padj_cutoff &Cond1_DF$ValueCol >Cond1_FC_cutoff ~ 'UP',
-                             Cond1_DF$PadjCol <Cond1_padj_cutoff &Cond1_DF$ValueCol < -Cond1_FC_cutoff ~ 'DOWN',
+    mutate(Cutoff = case_when(Cond1_DF$PadjCol <= Cond1_padj_cutoff & Cond1_DF$ValueCol >= Cond1_FC_cutoff ~ 'UP',
+                             Cond1_DF$PadjCol <= Cond1_padj_cutoff & Cond1_DF$ValueCol <= -Cond1_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change'))%>%
     mutate(Cutoff_Specific = case_when(Cutoff == "UP" ~ 'UP',
                                        Cutoff == "DOWN" ~ 'DOWN',
-                                       Cutoff == "No Change" & Cond1_DF$PadjCol < Cond1_padj_cutoff & Cond1_DF$ValueCol > 0 ~ 'Significant Positive',
-                                       Cutoff == "No Change" & Cond1_DF$PadjCol < Cond1_padj_cutoff & Cond1_DF$ValueCol < 0 ~ 'Significant Negative',
+                                       Cutoff == "No Change" & Cond1_DF$PadjCol <= Cond1_padj_cutoff & Cond1_DF$ValueCol > 0 ~ 'Significant Positive',
+                                       Cutoff == "No Change" & Cond1_DF$PadjCol <= Cond1_padj_cutoff & Cond1_DF$ValueCol < 0 ~ 'Significant Negative',
                                        Cutoff == "No Change" & Cond1_DF$PadjCol > Cond1_padj_cutoff ~ 'Not Significant',
                                        TRUE ~ 'FALSE'))
 
