@@ -19,10 +19,10 @@ navbar:
       text: Tutorials
       icon: fa-book-open # icons can be found here: https://fontawesome.com/icons?d=gallery
       menu:
+      - text: ChooseSettings
+        href: articles/ChooseSettings.html
       - text: TutorialR
-        href: articles/TutorialR.html
-      - text: Manuscript Overview
-        href: articles/Manuscript.html
+        href: articles/DataAnalysisExample.html
     #customize intro:
     intro:
       text: Introduction
@@ -45,10 +45,10 @@ navbar:
     manuscript:
       text: Manuscript
       icon: "fa-solid fa-dna"
-      href: https://www.biorxiv.org/content/10.1101/2022.07.02.498058v1
+      href: https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-024-01415-3
 
 home:
   sidebar:
-    structure: [citation, authors, toc, license] #other options: dev, links, community
+    structure: [authors, toc, license] #other options: dev, links, community
 
 
