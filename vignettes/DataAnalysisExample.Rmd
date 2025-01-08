@@ -28,7 +28,7 @@ The latest development version of ***SiRCleR package*** can be install from [Git
 #BiocManager::install("ArianeMora/SiRCleR")
 
 #For the latest development version use:
-devtools::install_github("https://github.com/ArianeMora/SiRCleR")
+#devtools::install_github("https://github.com/ArianeMora/SiRCleR")
 
 library(SiRCleR)
 
