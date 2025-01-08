@@ -40,7 +40,9 @@
 #' @param methDiffCutoff \emph{Optional: } DNA Methylation difference cutoff for DNA methylation \strong{Default=10}
 #' @param backgroundMethod \emph{Optional: } Background methods: "P|(M&R)", "P|M|R", "P|R", "P&R", "P&M&R", "(P&M)|(P&R)|(M&R)", "(P&M)|(P&R)" or "*". For details on the methods, please check https://github.com/ArianeMora/SiRCleR/blob/main/vignettes/SiRCle_RCM_Notebook.Rmd \strong{Default="P|(M&R)"}
 #' @param outputFileName \emph{Optional: } Output filename \strong{Default="SiRCle_RCM"}
-#' @return rcm an instance of the rcm package
+#'
+#' @return DF with input data combined by geneID and SiRCle Clusters
+#'
 #' @export
 #'
 sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPadjCol="padj", methValueCol="Diff", methPadjCol="padj", proteinValueCol="Log2FC", proteinPadjCol="padj", rna_padj_cutoff= 0.05, prot_padj_cutoff = 0.05, meth_padj_cutoff = 0.05,rna_FC_cutoff= 1, prot_FC_cutoff = 0.5, meth_Diff_cutoff = 0.1, backgroundMethod, OutputFileName = "Sircle_RCM"){
@@ -85,10 +87,10 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
 
   #Assign to Group based on individual Cutoff ("UP", "DOWN", "No Change")
   proteinDF <- proteinDF%>%
-    mutate(Cutoff = case_when(proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol >= prot_FC_cutoff ~ 'UP',
+    dplyr::mutate(Cutoff = dplyr::case_when(proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol >= prot_FC_cutoff ~ 'UP',
                               proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol <= -prot_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change')) %>%
-    mutate(Cutoff_Specific = case_when(Cutoff == "UP" ~ 'UP',
+    dplyr::mutate(Cutoff_Specific = dplyr::case_when(Cutoff == "UP" ~ 'UP',
                                        Cutoff == "DOWN" ~ 'DOWN',
                                        Cutoff == "No Change" & proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol > 0 ~ 'Significant Positive',
                                        Cutoff == "No Change" & proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol < 0 ~ 'Significant Negative',
@@ -96,12 +98,12 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                        TRUE ~ 'FALSE'))
 
   rnaDF <- rnaDF%>%
-    mutate(Cutoff = case_when(rnaDF$PadjCol <= rna_padj_cutoff & rnaDF$ValueCol >= rna_FC_cutoff ~ 'UP',
+    dplyr::mutate(Cutoff = dplyr::case_when(rnaDF$PadjCol <= rna_padj_cutoff & rnaDF$ValueCol >= rna_FC_cutoff ~ 'UP',
                               rnaDF$PadjCol <= rna_padj_cutoff & rnaDF$ValueCol <= -rna_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change'))
 
   methDF <- methDF%>%
-    mutate(Cutoff = case_when(methDF$PadjCol <= meth_padj_cutoff & methDF$ValueCol >= meth_Diff_cutoff ~ 'Hypermethylation',
+    dplyr::mutate(Cutoff = dplyr::case_when(methDF$PadjCol <= meth_padj_cutoff & methDF$ValueCol >= meth_Diff_cutoff ~ 'Hypermethylation',
                               methDF$PadjCol <= meth_padj_cutoff & methDF$ValueCol <= -meth_Diff_cutoff ~ 'Hypomethylation',
                               TRUE ~ 'No Change'))
 
@@ -125,14 +127,14 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
 
   ##Mark the undetected genes in each data layer
   MergeDF<-MergeDF %>%
-    mutate_at(c("proteinDF_Detected","rnaDF_Detected", "methDF_Detected"), ~replace_na(.,"FALSE"))%>%
-    mutate_at(c("proteinDF_Cutoff","rnaDF_Cutoff", "methDF_Cutoff"), ~replace_na(.,"No Change"))%>%
-    mutate_at(c("proteinDF_Cutoff_Specific"), ~replace_na(.,"Not Detected"))
+    dplyr::mutate_at(c("proteinDF_Detected","rnaDF_Detected", "methDF_Detected"), ~tidyr::replace_na(.,"FALSE"))%>%
+    dplyr::mutate_at(c("proteinDF_Cutoff","rnaDF_Cutoff", "methDF_Cutoff"), ~tidyr::replace_na(.,"No Change"))%>%
+    dplyr::mutate_at(c("proteinDF_Cutoff_Specific"), ~tidyr::replace_na(.,"Not Detected"))
 
   #Apply Background filter (label genes that will be removed based on choosen background)
   if(backgroundMethod == "P|(M&R)"){# P|(M&R) = Protein AND (DNA methylation OR RNA)
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(methDF_Detected=="TRUE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Methylation & Protein
+      dplyr::mutate(BG_Method = dplyr::case_when(methDF_Detected=="TRUE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Methylation & Protein
                                    methDF_Detected=="TRUE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="FALSE" ~ 'TRUE', # RNA & Methylation ~Protein
                                    methDF_Detected=="TRUE" & rnaDF_Detected=="FALSE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # ~ methylation RNA Protein
                                    methDF_Detected=="FALSE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # Methylation ~ RNA & protein
@@ -141,29 +143,29 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
   }
   else if(backgroundMethod == "P|M|R"){ # Protein OR methylation OR RNA
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(methDF_Detected=="FALSE" & rnaDF_Detected=="FALSE" & proteinDF_Detected=="FALSE" ~ 'FALSE', # i.e. only one we don't want is Not detected in all
+      dplyr::mutate(BG_Method = dplyr::case_when(methDF_Detected=="FALSE" & rnaDF_Detected=="FALSE" & proteinDF_Detected=="FALSE" ~ 'FALSE', # i.e. only one we don't want is Not detected in all
                                    TRUE ~ 'TRUE'))
   }
   else if(backgroundMethod == "P|R"){# Protein OR RNA
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(methDF_Detected=="FALSE" & rnaDF_Detected=="FALSE" & proteinDF_Detected=="FALSE" ~ 'FALSE', # i.e. only one we don't want is Not detected in all
+      dplyr::mutate(BG_Method = dplyr::case_when(methDF_Detected=="FALSE" & rnaDF_Detected=="FALSE" & proteinDF_Detected=="FALSE" ~ 'FALSE', # i.e. only one we don't want is Not detected in all
                                    methDF_Detected=="TRUE" & rnaDF_Detected=="FALSE" & proteinDF_Detected=="FALSE" ~ 'FALSE',  # i.e. only one we don't want is NS in protein and RNA
                                    TRUE ~ 'TRUE'))
   }
   else if(backgroundMethod == "P&R"){# Protein AND RNA
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(methDF_Detected=="TRUE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Methylation & Protein
+      dplyr::mutate(BG_Method = dplyr::case_when(methDF_Detected=="TRUE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Methylation & Protein
                                    methDF_Detected=="FALSE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # Methylation ~ RNA & protein
                                    TRUE ~ 'FALSE'))
   }
   else if(backgroundMethod == "P&M&R"){# Protein AND Methylation AND RNA
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(methDF_Detected=="TRUE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Methylation & Protein
+      dplyr::mutate(BG_Method = dplyr::case_when(methDF_Detected=="TRUE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Methylation & Protein
                                    TRUE ~ 'FALSE'))
   }
   else if(backgroundMethod == "(P&M)|(P&R)|(M&R)"){ # At least two are significant
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(methDF_Detected=="TRUE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Methylation & Protein
+      dplyr::mutate(BG_Method = dplyr::case_when(methDF_Detected=="TRUE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Methylation & Protein
                                    methDF_Detected=="TRUE" & rnaDF_Detected=="FALSE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # P&M
                                    methDF_Detected=="FALSE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # P&R
                                    methDF_Detected=="TRUE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="FALSE" ~ 'TRUE', # M&R
@@ -171,7 +173,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
   }
   else if(backgroundMethod == "(P&M)|(P&R)"){ # Protein and one other
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(methDF_Detected=="TRUE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Methylation & Protein
+      dplyr::mutate(BG_Method = dplyr::case_when(methDF_Detected=="TRUE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Methylation & Protein
                                    methDF_Detected=="TRUE" & rnaDF_Detected=="FALSE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # P&M
                                    methDF_Detected=="FALSE" & rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # P&R
                                    TRUE ~ 'FALSE'))
@@ -185,7 +187,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
 
   #Assign SiRCle cluster names to the genes
   MergeDF <- MergeDF%>%
-    mutate(RG1_All = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG1_All = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                                methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'Hypermethylation + RNA DOWN + Protein DOWN',#State 1
                                methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'Hypermethylation + RNA No change + Protein DOWN',#State 2
                                methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'Hypermethylation + RNA UP + Protein DOWN',#State 3
@@ -243,7 +245,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                methDF_Cutoff=="No Change" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'Methylation No Change + RNA No change + Protein UP',#State 35
                                methDF_Cutoff=="No Change" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'Methylation No Change + RNA UP + Protein UP',#State 36
                                TRUE ~ 'NA'))%>%
-    mutate(RG2_Changes = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG2_Changes = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                                    methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'MDS',#State 1
                                    methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 2
                                    methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDE_TMDS',#State 3
@@ -301,7 +303,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                    methDF_Cutoff=="No Change" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 35
                                    methDF_Cutoff=="No Change" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDE',#State 36
                                    TRUE ~ 'NA'))%>%
-    mutate(RG3_Protein = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG3_Protein = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                                    methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'MDS',#State 1
                                    methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 2
                                    methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 3
@@ -359,7 +361,7 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
                                    methDF_Cutoff=="No Change" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="UP" ~ 'TMDE',#State 35
                                    methDF_Cutoff=="No Change" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDE',#State 36
                                    TRUE ~ 'NA'))%>%
-    mutate(RG4_Detection = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG4_Detection = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                                      methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'MDS',#State 1
                                      methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="No Change" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TMDS',#State 2
                                      methDF_Cutoff=="Hypermethylation" & rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDE_TMDS',#State 3
@@ -450,22 +452,22 @@ sircleRCM_MRP <- function(methFile, rnaFile, protFile, geneID, rnaValueCol="Log2
 
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
   ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
-    count(RG1_All, name="Number of Genes")%>%
+    dplyr::count(RG1_All, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG1_All")
   ClusterSummary_RG1$`Regulation Grouping` <- "RG1_All"
 
   ClusterSummary_RG2 <- MergeDF_Rearrange[,c("geneID", "RG2_Changes")]%>%
-    count(RG2_Changes, name="Number of Genes")%>%
+    dplyr::count(RG2_Changes, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG2_Changes")
   ClusterSummary_RG2$`Regulation Grouping` <- "RG2_Changes"
 
   ClusterSummary_RG3 <- MergeDF_Rearrange[,c("geneID", "RG3_Protein")]%>%
-    count(RG3_Protein, name="Number of Genes")%>%
+    dplyr::count(RG3_Protein, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG3_Protein")
   ClusterSummary_RG3$`Regulation Grouping` <- "RG3_Protein"
 
   ClusterSummary_RG4 <- MergeDF_Rearrange[,c("geneID","RG4_Detection")]%>%
-    count(RG4_Detection, name="Number of Genes")%>%
+    dplyr::count(RG4_Detection, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG4_Detection")
   ClusterSummary_RG4$`Regulation Grouping` <- "RG4_Detection"
 
@@ -528,10 +530,10 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
 
   #Assign to Group based on individual Cutoff ("UP", "DOWN", "No Change")
   proteinDF <- proteinDF%>%
-    mutate(Cutoff = case_when(proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol >= prot_FC_cutoff ~ 'UP',
+    dplyr::mutate(Cutoff = dplyr::case_when(proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol >= prot_FC_cutoff ~ 'UP',
                               proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol <= -prot_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change')) %>%
-    mutate(Cutoff_Specific = case_when(Cutoff == "UP" ~ 'UP',
+    dplyr::mutate(Cutoff_Specific = dplyr::case_when(Cutoff == "UP" ~ 'UP',
                                        Cutoff == "DOWN" ~ 'DOWN',
                                        Cutoff == "No Change" & proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol > 0 ~ 'Significant Positive',
                                        Cutoff == "No Change" & proteinDF$PadjCol <= prot_padj_cutoff & proteinDF$ValueCol < 0 ~ 'Significant Negative',
@@ -539,7 +541,7 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
                                        TRUE ~ 'FALSE'))
 
   rnaDF <- rnaDF%>%
-    mutate(Cutoff = case_when(rnaDF$PadjCol <= rna_padj_cutoff & rnaDF$ValueCol >= rna_FC_cutoff ~ 'UP',
+    dplyr::mutate(Cutoff = dplyr::case_when(rnaDF$PadjCol <= rna_padj_cutoff & rnaDF$ValueCol >= rna_FC_cutoff ~ 'UP',
                               rnaDF$PadjCol <= rna_padj_cutoff & rnaDF$ValueCol <= -rna_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change'))
 
@@ -559,32 +561,32 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
 
   ##Mark the undetected genes in each data layer
   MergeDF<-MergeDF %>%
-    mutate_at(c("proteinDF_Detected","rnaDF_Detected"), ~replace_na(.,"FALSE"))%>%
-    mutate_at(c("proteinDF_Cutoff","rnaDF_Cutoff"), ~replace_na(.,"No Change"))%>%
-    mutate_at(c("proteinDF_Cutoff_Specific"), ~replace_na(.,"Not Detected"))
+    dplyr::mutate_at(c("proteinDF_Detected","rnaDF_Detected"), ~tidyr::replace_na(.,"FALSE"))%>%
+    dplyr::mutate_at(c("proteinDF_Cutoff","rnaDF_Cutoff"), ~tidyr::replace_na(.,"No Change"))%>%
+    dplyr::mutate_at(c("proteinDF_Cutoff_Specific"), ~tidyr::replace_na(.,"Not Detected"))
 
   #Apply Background filter (label genes that will be removed based on choosen background)
   if(backgroundMethod == "P|R)"){# P|R = Protein OR RNA
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
+      dplyr::mutate(BG_Method = dplyr::case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
                                    rnaDF_Detected=="TRUE" & proteinDF_Detected=="FALSE" ~ 'TRUE', # Just RNA
                                    rnaDF_Detected=="FALSE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # Just Protein
                                    TRUE ~ 'FALSE'))
   }
   else if(backgroundMethod == "P&R"){ # Protein AND RNA
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
+      dplyr::mutate(BG_Method = dplyr::case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
                                    TRUE ~ 'FALSE'))
   }
   else if(backgroundMethod == "P"){ # Protein has to be there
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
+      dplyr::mutate(BG_Method = dplyr::case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
                                    rnaDF_Detected=="FALSE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # Just Protein
                                    TRUE ~ 'FALSE'))
   }
   else if(backgroundMethod == "R"){ # RNA has to be there
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
+      dplyr::mutate(BG_Method = dplyr::case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
                                    rnaDF_Detected=="TRUE" & proteinDF_Detected=="FALSE" ~ 'TRUE', # Just RNA
                                    TRUE ~ 'FALSE'))
   }
@@ -597,7 +599,7 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
 
   #Assign SiRCle cluster names to the genes
   MergeDF <- MergeDF%>%
-    mutate(RG1_All = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG1_All = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                                rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'RNA DOWN + Protein DOWN',#State 1
                                rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'RNA DOWN + Protein Not Detected',#State 2
                                rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'RNA DOWN + Protein Not Significant',#State 3
@@ -619,7 +621,7 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
                                rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'RNA UP + Protein Significant Positive',#State 16
                                rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'RNA UP + Protein UP',#State 17
                                TRUE ~ 'NA'))%>%
-    mutate(RG2_Changes = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG2_Changes = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                                    rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDS',#State 1
                                    rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'TPDS_TMDE',#State 2
                                    rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'TPDS_TMDE',#State 3
@@ -641,7 +643,7 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
                                    rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'TPDE',#State 16
                                    rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDE',#State 17
                                    TRUE ~ 'NA'))%>%
-    mutate(RG3_Protein = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG3_Protein = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                                    rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDS',#State 1
                                    rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'TPDS',#State 2
                                    rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'TPDS',#State 3
@@ -663,7 +665,7 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
                                    rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="Significant Positive" ~ 'TPDE',#State 16
                                    rnaDF_Cutoff=="UP" & proteinDF_Cutoff_Specific=="UP" ~ 'TPDE',#State 17
                                    TRUE ~ 'NA'))%>%
-    mutate(RG4_Detection = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG4_Detection = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                                      rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="DOWN" ~ 'TPDS',#State 1
                                      rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Detected" ~ 'TPDS',#State 2
                                      rnaDF_Cutoff=="DOWN" & proteinDF_Cutoff_Specific=="Not Significant" ~ 'TPDS_TMDE',#State 3
@@ -714,22 +716,22 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
 
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
   ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
-    count(RG1_All, name="Number of Genes")%>%
+    dplyr::count(RG1_All, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG1_All")
   ClusterSummary_RG1$`Regulation Grouping` <- "RG1_All"
 
   ClusterSummary_RG2 <- MergeDF_Rearrange[,c("geneID", "RG2_Changes")]%>%
-    count(RG2_Changes, name="Number of Genes")%>%
+    dplyr::count(RG2_Changes, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG2_Changes")
   ClusterSummary_RG2$`Regulation Grouping` <- "RG2_Changes"
 
   ClusterSummary_RG3 <- MergeDF_Rearrange[,c("geneID", "RG3_Protein")]%>%
-    count(RG3_Protein, name="Number of Genes")%>%
+    dplyr::count(RG3_Protein, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG3_Protein")
   ClusterSummary_RG3$`Regulation Grouping` <- "RG3_Protein"
 
   ClusterSummary_RG4 <- MergeDF_Rearrange[,c("geneID","RG4_Detection")]%>%
-    count(RG4_Detection, name="Number of Genes")%>%
+    dplyr::count(RG4_Detection, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG4_Detection")
   ClusterSummary_RG4$`Regulation Grouping` <- "RG4_Detection"
 
@@ -793,10 +795,10 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
 
   #Assign to Group based on individual Cutoff ("UP", "DOWN", "No Change")
   Cond2_DF <- Cond2_DF%>%
-    mutate(Cutoff = case_when(Cond2_DF$PadjCol <= Cond2_padj_cutoff & Cond2_DF$ValueCol >= Cond2_FC_cutoff ~ 'UP',
+    dplyr::mutate(Cutoff = dplyr::case_when(Cond2_DF$PadjCol <= Cond2_padj_cutoff & Cond2_DF$ValueCol >= Cond2_FC_cutoff ~ 'UP',
                               Cond2_DF$PadjCol <= Cond2_padj_cutoff & Cond2_DF$ValueCol <= -Cond2_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change')) %>%
-    mutate(Cutoff_Specific = case_when(Cutoff == "UP" ~ 'UP',
+    dplyr::mutate(Cutoff_Specific = dplyr::case_when(Cutoff == "UP" ~ 'UP',
                                        Cutoff == "DOWN" ~ 'DOWN',
                                        Cutoff == "No Change" & Cond2_DF$PadjCol <= Cond2_padj_cutoff & Cond2_DF$ValueCol > 0 ~ 'Significant Positive',
                                        Cutoff == "No Change" & Cond2_DF$PadjCol <= Cond2_padj_cutoff & Cond2_DF$ValueCol < 0 ~ 'Significant Negative',
@@ -804,10 +806,10 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                                        TRUE ~ 'FALSE'))
 
   Cond1_DF <-Cond1_DF%>%
-    mutate(Cutoff = case_when(Cond1_DF$PadjCol <= Cond1_padj_cutoff & Cond1_DF$ValueCol >= Cond1_FC_cutoff ~ 'UP',
+    dplyr::mutate(Cutoff = dplyr::case_when(Cond1_DF$PadjCol <= Cond1_padj_cutoff & Cond1_DF$ValueCol >= Cond1_FC_cutoff ~ 'UP',
                              Cond1_DF$PadjCol <= Cond1_padj_cutoff & Cond1_DF$ValueCol <= -Cond1_FC_cutoff ~ 'DOWN',
                               TRUE ~ 'No Change'))%>%
-    mutate(Cutoff_Specific = case_when(Cutoff == "UP" ~ 'UP',
+    dplyr::mutate(Cutoff_Specific = dplyr::case_when(Cutoff == "UP" ~ 'UP',
                                        Cutoff == "DOWN" ~ 'DOWN',
                                        Cutoff == "No Change" & Cond1_DF$PadjCol <= Cond1_padj_cutoff & Cond1_DF$ValueCol > 0 ~ 'Significant Positive',
                                        Cutoff == "No Change" & Cond1_DF$PadjCol <= Cond1_padj_cutoff & Cond1_DF$ValueCol < 0 ~ 'Significant Negative',
@@ -829,29 +831,29 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
 
   ##Mark the undetected genes in each data layer
   MergeDF<-MergeDF %>%
-    mutate_at(c("Cond2_DF_Detected","Cond1_DF_Detected"), ~replace_na(.,"FALSE"))%>%
-    mutate_at(c("Cond2_DF_Cutoff","Cond1_DF_Cutoff"), ~replace_na(.,"No Change"))%>%
-    mutate_at(c("Cond2_DF_Cutoff_Specific", "Cond1_DF_Cutoff_Specific"), ~replace_na(.,"Not Detected"))
+    dplyr::mutate_at(c("Cond2_DF_Detected","Cond1_DF_Detected"), ~tidyr::replace_na(.,"FALSE"))%>%
+    dplyr::mutate_at(c("Cond2_DF_Cutoff","Cond1_DF_Cutoff"), ~tidyr::replace_na(.,"No Change"))%>%
+    dplyr::mutate_at(c("Cond2_DF_Cutoff_Specific", "Cond1_DF_Cutoff_Specific"), ~tidyr::replace_na(.,"Not Detected"))
 
   #Apply Background filter (label genes that will be removed based on choosen background)
   if(backgroundMethod == "C1|C2"){# C1|C2 = Cond2 OR Cond1
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', #Cond1 & Cond2
+      dplyr::mutate(BG_Method = dplyr::case_when(Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', #Cond1 & Cond2
                                   Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="FALSE" ~ 'TRUE', # JustCond1
                                   Cond1_DF_Detected=="FALSE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', # Just Cond2
                                    TRUE ~ 'FALSE'))
   }else if(backgroundMethod == "C1&C2"){ # Cond2 AND Cond1
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', #Cond1 & Cond2
+      dplyr::mutate(BG_Method = dplyr::case_when(Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', #Cond1 & Cond2
                                    TRUE ~ 'FALSE'))
   }else if(backgroundMethod == "C2"){ # Cond2 has to be there
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', #Cond1 & Cond2
+      dplyr::mutate(BG_Method = dplyr::case_when(Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', #Cond1 & Cond2
                                   Cond1_DF_Detected=="FALSE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', # Just Cond2
                                    TRUE ~ 'FALSE'))
   }else if(backgroundMethod == "C1"){ #Cond1 has to be there
     MergeDF <- MergeDF%>%
-      mutate(BG_Method = case_when(Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', #Cond1 & Cond2
+      dplyr::mutate(BG_Method = dplyr::case_when(Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="TRUE" ~ 'TRUE', #Cond1 & Cond2
                                   Cond1_DF_Detected=="TRUE" & Cond2_DF_Detected=="FALSE" ~ 'TRUE', # JustCond1
                                    TRUE ~ 'FALSE'))
   }else if(backgroundMethod == "*"){ # Use all genes as the background
@@ -862,7 +864,7 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
 
   #Assign SiRCle cluster names to the genes
   MergeDF <- MergeDF%>%
-    mutate(RG1_Specific_Cond2 = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG1_Specific_Cond2 = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                               Cond1_DF_Cutoff=="DOWN" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 DOWN + Cond2 DOWN',#State 1
                               Cond1_DF_Cutoff=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 DOWN + Cond2 Not Detected',#State 2
                               Cond1_DF_Cutoff=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 DOWN + Cond2 Not Significant',#State 3
@@ -884,7 +886,7 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                               Cond1_DF_Cutoff=="UP" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 UP + Cond2 Significant Positive',#State 16
                               Cond1_DF_Cutoff=="UP" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 UP + Cond2 UP',#State 17
                                TRUE ~ 'NA'))%>%
-    mutate(RG1_Specific_Cond1 = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG1_Specific_Cond1 = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                               Cond2_DF_Cutoff=="DOWN" & Cond1_DF_Cutoff_Specific=="DOWN" ~ 'Cond2 DOWN + Cond1 DOWN',#State 1
                               Cond2_DF_Cutoff=="DOWN" & Cond1_DF_Cutoff_Specific=="Not Detected" ~ 'Cond2 DOWN + Cond1 Not Detected',#State 2
                               Cond2_DF_Cutoff=="DOWN" & Cond1_DF_Cutoff_Specific=="Not Significant" ~ 'Cond2 DOWN + Cond1 Not Significant',#State 3
@@ -906,7 +908,7 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                               Cond2_DF_Cutoff=="UP" & Cond1_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond2 UP + Cond1 Significant Positive',#State 16
                               Cond2_DF_Cutoff=="UP" & Cond1_DF_Cutoff_Specific=="UP" ~ 'Cond2 UP + Cond1 UP',#State 17
                                TRUE ~ 'NA'))%>%
-    mutate(RG1_All = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG1_All = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Cond1 DOWN + Cond2 DOWN',#State 1
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1 DOWN + Cond2 Not Detected',#State 2
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1 DOWN + Cond2 Not Significant',#State 3
@@ -949,7 +951,7 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'Cond1 Not Significant + Cond2 Significant Positive',#State 16
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond1 Not Significant + Cond2 UP',#State 1
                                TRUE ~ 'NA'))%>%
-    mutate(RG2_Significant = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG2_Significant = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Core_DOWN',#State 1
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1_DOWN',#State 2
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1_DOWN',#State 3
@@ -992,7 +994,7 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="Significant Positive" ~ 'None',#State 16
                               Cond1_DF_Cutoff_Specific=="Not Significant" & Cond2_DF_Cutoff_Specific=="UP" ~ 'Cond2_UP',#State 1
                                TRUE ~ 'NA'))%>%
-    mutate(RG3_SignificantChange = case_when(BG_Method =="FALSE"~ 'Background = FALSE',
+    dplyr::mutate(RG3_SignificantChange = dplyr::case_when(BG_Method =="FALSE"~ 'Background = FALSE',
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="DOWN" ~ 'Core_DOWN',#State 1
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Detected" ~ 'Cond1_DOWN',#State 2
                               Cond1_DF_Cutoff_Specific=="DOWN" & Cond2_DF_Cutoff_Specific=="Not Significant" ~ 'Cond1_DOWN',#State 3
@@ -1057,17 +1059,17 @@ sircleRCM_2Cond <- function(Cond1_File, Cond2_File, geneID,Cond1ValueCol="Log2FC
 
   ##Summary SiRCle clusters (number of genes assigned to each SiRCle cluster in each grouping)
   ClusterSummary_RG1 <- MergeDF_Rearrange[,c("geneID", "RG1_All")]%>%
-    count(RG1_All, name="Number of Genes")%>%
+    dplyr::count(RG1_All, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG1_All")
   ClusterSummary_RG1$`Regulation Grouping` <- "RG1_All"
 
   ClusterSummary_RG2 <- MergeDF_Rearrange[,c("geneID", "RG2_Significant")]%>%
-    count(RG2_Significant, name="Number of Genes")%>%
+    dplyr::count(RG2_Significant, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG2_Significant")
   ClusterSummary_RG2$`Regulation Grouping` <- "RG2_Significant"
 
   ClusterSummary_RG3 <- MergeDF_Rearrange[,c("geneID", "RG3_SignificantChange")]%>%
-    count(RG3_SignificantChange, name="Number of Genes")%>%
+    dplyr::count(RG3_SignificantChange, name="Number of Genes")%>%
      dplyr::rename("SiRCle cluster Name"= "RG3_SignificantChange")
   ClusterSummary_RG3$`Regulation Grouping` <- "RG3_SignificantChange"
 
