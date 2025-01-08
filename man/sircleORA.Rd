@@ -5,44 +5,51 @@
 \title{sircleORA}
 \usage{
 sircleORA(
-  filename,
-  entrezId,
-  regLabels = "RG3_Protein",
+  InputData,
+  geneID,
+  regLabels = "RegulatoryLabels",
+  PriorKnowledge,
+  PKName = "",
   emptyRegLabel = "",
   RemoveBackgroundGenes = "TRUE",
-  fileType = "pdf",
+  Plot_FileType = "pdf",
   minGSSize = 10,
-  qvalueCutoff = 0.2,
-  pvalueCutoff = 0.05,
-  showCatagory = 30,
-  OutputFileName = "",
-  Organism = "Human"
+  maxGSSize = 1000,
+  Plot_p.adj = 0.2,
+  Plot_Percentage = 10,
+  OutputFileName = ""
 )
 }
 \arguments{
-\item{filename}{Input file}
+\item{InputData}{DF with column gene names amd regulatory labels (i.e. sircle clusters). Usually output from SiRCle RCM functions.}
 
-\item{entrezId}{Column name for the entrez ID}
+\item{geneID}{Provide column name for the gene ID in InputData. Needs to match the the gene ID in the pathway file provided}
 
-\item{regLabels}{\emph{Optional: } regLabels The label of the column with the regulatory labels \strong{default: "RG3_Protein"}}
+\item{regLabels}{\emph{Optional: } Column name of the column with the regulatory labels in InputData. \strong{default: "RegulatoryLabels"}}
 
-\item{emptyRegLabel}{\emph{Optional: } emptyRegLabel The label of the empty regulatory group \strong{default: ""}}
+\item{PriorKnowledge}{DF including the prior knowledge (PK), ie. pathway file. File must include column "term" with the pathway or TF-regulon name, column "gene" with the gene name and column "Description" with description that will be depicted on the plots.}
 
-\item{fileType}{\emph{Optional: } fileType Output file type for the figures one of: "svg", "pdf", "png" \strong{default: "pdf"}}
+\item{PKName}{\emph{Optional: } Name of the prior knowledge used, i.e. pathway name such as KEGG \strong{default: ""}}
+
+\item{emptyRegLabel}{\emph{Optional: } Column name of the empty regulatory group \strong{default: ""}}
+
+\item{Plot_FileType}{\emph{Optional: } Output file type for the figures one of: "svg", "pdf", "png" \strong{default: "pdf"}}
 
 \item{minGSSize}{\emph{Optional: } minimum group size in ORA \strong{default: 10}}
 
-\item{qvalueCutoff}{\emph{Optional: } q value cutoff from ORA \strong{default: 0.2}}
+\item{maxGSSize}{\emph{Optional: } maximum group size in ORA \strong{default: 1000}}
 
-\item{OutputFileName}{Output filename}
+\item{Plot_p.adj}{\emph{Optional: } q value cutoff from ORA that should be plotted \strong{default: 0.2}}
 
-\item{Organism}{\emph{Optional: } Choose either "Human" or "Mouse" \strong{default: Human"}}
+\item{Plot_Percentage}{\emph{Optional: } Percentage of genes that are detected of a pathway \strong{default: 10}}
+
+\item{OutputFileName}{\emph{Optional: } Output filename \strong{default: ""}}
 
 \item{RemoveBackgroundGenes\emph{Optional:}{} If TRUE, genes that fall into background based on the choosen Background method for SiRCle RCM are removed from the universe. \strong{default: "TRUE"}}
 }
 \value{
-sircleORA an instance of the sircle package
+DF with the results of the over representation analysis
 }
 \description{
-Uses encrichGo to run ORA on each of the clusters as defined by the regulatory labels using GO terms pathways
+Uses enricher to run ORA on each of the clusters as defined by the regulatory labels using prior knowledge such as gene-sets
 }

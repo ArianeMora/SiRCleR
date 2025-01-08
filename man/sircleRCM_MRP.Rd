@@ -63,7 +63,7 @@ sircleRCM_MRP(
 \item{outputFileName}{\emph{Optional: } Output filename \strong{Default="SiRCle_RCM"}}
 }
 \value{
-rcm an instance of the rcm package
+DF with input data combined by geneID and SiRCle Clusters
 }
 \description{
 Computes the regulatory clustering model (RCM) using the SiRCle regulatory rules for DNA-methylation, RNAseq and Proteomics data layers (MRP).
