@@ -11,7 +11,7 @@ template:
 navbar:
   bg: primary #If you want a different style you can check on bootstrap, e.g. for bootswatch: flatly = https://bootswatch.com/flatly/
   structure:
-    left: [home, intro, articles, reference, tutorials, news] #intro: “Get Started”, which links to a vignette with the same name as the package.#reference, if there are any .Rd files. #articles, if there are any vignettes or articles.#tutorials, if there any tutorials. #news, if NEWS.md exists.
+    left: [home, articles, reference, tutorials, news] #intro: “Get Started”, which links to a vignette with the same name as the package.#reference, if there are any .Rd files. #articles, if there are any vignettes or articles.#tutorials, if there any tutorials. #news, if NEWS.md exists.
     right: [github, python, manuscript]
   components:
     #Customize articles:
@@ -19,15 +19,10 @@ navbar:
       text: Tutorials
       icon: fa-book-open # icons can be found here: https://fontawesome.com/icons?d=gallery
       menu:
+      - text: ChooseSettings
+        href: articles/ChooseSettings.html
       - text: TutorialR
-        href: articles/TutorialR.html
-      - text: Manuscript Overview
-        href: articles/Manuscript.html
-    #customize intro:
-    intro:
-      text: Introduction
-      icon: fa-home
-      href: articles/SiRCle_RCM_Notebook.html
+        href: articles/DataAnalysisExample.html
     #customize intro:
     reference:
       text: Reference
@@ -45,10 +40,10 @@ navbar:
     manuscript:
       text: Manuscript
       icon: "fa-solid fa-dna"
-      href: https://www.biorxiv.org/content/10.1101/2022.07.02.498058v1
+      href: https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-024-01415-3
 
 home:
   sidebar:
-    structure: [citation, authors, toc, license] #other options: dev, links, community
+    structure: [authors, toc, license] #other options: dev, links, community
 
 
