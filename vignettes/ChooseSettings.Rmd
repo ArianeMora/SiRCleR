@@ -8,11 +8,17 @@ output:
     self_contained: true
     toc: true
     toc_float: true
-    toc_depth: 3
+    toc_depth: 5
+    code_folding: show
 vignette: >
   %\VignetteIndexEntry{SiRCle Method}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+bibliography: bibliography.bib
+editor_options:
+  chunk_output_type: console
+  markdown:
+    wrap: sentence
 ---
 
 
@@ -32,7 +38,7 @@ library(dplyr)
 This notebook is meant as a guide for choosing the settings for the Signature Regulatory Clustering (SiRCle) dependent on the biological question of interest. This guide is divided into three main chapters that give an overview on the SiRcle method, each covering one of the main settings in the `sircleRCM() functions` (Regulatory Clustering Method) namely the "Background method (BG)", the "Regulation Grouping (RG)" and the thresholds/cutoffs of the input data.\
 \
 ***sircleRCM_MRP()***\
-The original Regulatory Clustering Method (RCM) `sircleRCM_MRP()` was developed to perform biologically meaningful clustering integrating DNA methylation, mRNA, and protein data at the gene level. Based on the differential analysis (e.g. Tumour versus Normal), we defined three states, namely positive, negative or unchanged, for each gene and data layer. Given that the protein expression is the data layer closest to the phenotype, yet at the same time has the lowest coverage, “No Change” is subdivided into four states for the protein data layer, “Not Detected”, “Not Significant”, “significant negative” and “significant positive”. For more details and explanation check out the original [publication](https://www.biorxiv.org/content/10.1101/2022.07.02.498058v1.supplementary-material).\
+The original Regulatory Clustering Method (RCM) `sircleRCM_MRP()` was developed to perform biologically meaningful clustering integrating DNA methylation, mRNA, and protein data at the gene level. Based on the differential analysis (e.g. Tumour versus Normal), we defined three states, namely positive, negative or unchanged, for each gene and data layer. Given that the protein expression is the data layer closest to the phenotype, yet at the same time has the lowest coverage, “No Change” is subdivided into four states for the protein data layer, “Not Detected”, “Not Significant”, “significant negative” and “significant positive”. For more details and explanation check out the publication from [Mora&Schmidt et al.](https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-024-01415-3) [@Mora_Schmidt2024].\
 \
 <center>
 ![**Fig. 1:** Overview of SiRCle Regulatory Clustering. a) Alluvial plot showing the ordered series of three 3-state-3-state-6-state transitions between the data layers, a total of 54 possible “flows”. b) Biological meaning the flows between the data layers will conveye.](sircleRCM_MRP.png){width=90%}
@@ -127,17 +133,28 @@ Least stringent background method, since a gene will be included in the SiRCle i
   <div class="progress-bar progress-bar" style="width: 100%"></div>
 </div>
 Here we can set two different thresholds, one for the differential expression, which would mostly be `Log2FC` for the RNAseq and proteomics data layer and `Differential Methylated Regions (DMR)` for DNA-methylation, and one for the `significance` (e.g. p.adj). This will define if a feature (= e.g. gene) is assigned into:\
+\
 1. ***"UP"***, which means a feature is significantly up-regulated in the underlying comparison.\
+\
 2. ***"DOWN"***,  which means a feature is significantly down-regulated in the underlying comparison.\
+\
 3. ***"No Change"***, which means a feature does not change significantly in the underlying comparison and/or is not defined as up-regulated/down-regulated based on the Log2FC threshold chosen.\
 \
+\
 Given that the protein expression is the data layer closest to the phenotype, yet at the same time has the lowest coverage, “No Change” is subdivided into four states for the protein data layer:\
+\
 1. ***“Not Detected”***, which means a feature is not detected in the underlying data layer.\
+\
 2. ***“Not Significant”***, which means a feature is not significant in the underlying comparison.\
+\
 3. ***“Significant negative”***, which means a feature is significant in the underlying comparison and the differential expression is positive, yet does not meet the threshold set for "UP" (e.g. Log2FC >1 = "UP" and we have a significant Log2FC=0.8).\
+\
 4. ***“Significant positive”***, which means a feature is significant in the underlying comparison and the differential expression is positive, yet does not meet the threshold set for "DOWN".\
 \
+\
 This definition is done individually for each data layer,(proteomics, RNAseq, DNA-methylation) and will impact in which SiRCle cluster a gene is sorted into. The latter will be discussed in detail below (see "3. Regulation Grouping (RG)").
+
+
 
 <div class="progress progress-striped active">
   <div class="progress-bar progress-bar" style="width: 100%"></div>
@@ -197,3 +214,6 @@ Using ***sircleRCM_2Cond()*** based on any two input data, will provide RG1_All,
 options(width = 120)
 sessioninfo::session_info()
 ```
+
+# Bibliography
+
