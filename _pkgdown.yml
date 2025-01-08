@@ -11,7 +11,7 @@ template:
 navbar:
   bg: primary #If you want a different style you can check on bootstrap, e.g. for bootswatch: flatly = https://bootswatch.com/flatly/
   structure:
-    left: [home, intro, articles, reference, tutorials, news] #intro: “Get Started”, which links to a vignette with the same name as the package.#reference, if there are any .Rd files. #articles, if there are any vignettes or articles.#tutorials, if there any tutorials. #news, if NEWS.md exists.
+    left: [home, articles, reference, tutorials, news] #intro: “Get Started”, which links to a vignette with the same name as the package.#reference, if there are any .Rd files. #articles, if there are any vignettes or articles.#tutorials, if there any tutorials. #news, if NEWS.md exists.
     right: [github, python, manuscript]
   components:
     #Customize articles:
@@ -23,11 +23,6 @@ navbar:
         href: articles/ChooseSettings.html
       - text: TutorialR
         href: articles/DataAnalysisExample.html
-    #customize intro:
-    intro:
-      text: Introduction
-      icon: fa-home
-      href: articles/SiRCle_RCM_Notebook.html
     #customize intro:
     reference:
       text: Reference
