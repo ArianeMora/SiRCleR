@@ -1,0 +1,8 @@
+"0","sircle::sircleRCM_MRP(methFile=DNAmeth,"
+"0","                      rnaFile=mRNA,"
+"0","                      protFile=Proteomics,"
+"0","                      geneID=""gene_name"","
+"0","                      backgroundMethod=""P|(M&R)"","
+"0","                      OutputFileName = ""Sircle_RCM.csv"")"
+"2","Warning: RNAseq dataset contained duplicates based on geneID! Dropping duplicate IDs and kept only the first entry. You had 17 duplicates."
+"2","Warning: Note that you should do this before running SiRCle."

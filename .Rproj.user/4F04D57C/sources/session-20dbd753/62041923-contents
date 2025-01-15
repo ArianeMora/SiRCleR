@@ -1,0 +1,112 @@
+---
+title: "SiRCleR Tutorial"
+author:
+  - name: Ariane Mora
+  - name: Christina Schmidt
+output: 
+  html_document:
+    self_contained: true
+    toc: true
+    toc_float: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{SiRCleR Tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+# Installation
+The latest development version of ***SiRCleR package*** can be install from [GitHub](https://github.com/ArianeMora/SiRCleR) with:
+```{r github_install, message=FALSE, warning=FALSE}
+#BiocManager::install("ArianeMora/SiRCleR")
+
+#For the latest development version use:
+devtools::install_github("https://github.com/ArianeMora/SiRCleR")
+
+library(SiRCleR)
+
+#load dependencies:
+library(tidyverse)
+```
+
+# Input Data
+Load example data:
+```{r}
+# Load the data from inst/extdata within the SiRCleR package:
+DNAmeth <- readRDS(system.file("extdata", "DNAMethylation.rds", package="SiRCleR"))
+mRNA <- readRDS(system.file("extdata", "RNAseq.rds", package="SiRCleR"))
+Proteomics <- readRDS(system.file("extdata", "Proteomics.rds", package="SiRCleR"))
+```
+
+# Run SiRCleR functions
+## Regulatory Clustering Model (RCM)
+Details to the sircleRCM_MRP() function can be found [here](). If you have different column names for Log2FC and p.adjusted value and/or want to use different cutoffs you will have to change parameters from default.
+```{r, warning=FALSE, message=FALSE}
+SiRCleR::sircleRCM_MRP(methFile=DNAmeth,
+                      rnaFile=mRNA,
+                      protFile=Proteomics,
+                      geneID="gene_name",
+                      backgroundMethod="P|(M&R)",
+                      OutputFileName = "Sircle_RCM")
+```
+
+## Pathway analysis on SiRCle clusters
+Here we perform Over Presentation Analysis (ORA) on each SiRCle clustser. This can be either done using the GO-terms signature for human or mouse data or by providing a pathway file of choice./
+
+### GO-terms
+As we have human data here, which is also apparent from the gene names being capitalized, we will use the function `sircleORA()`. You can see the details of it [here](). For mouse gene names you can switch the parameter `Organism` to "Mouse".
+```{r, warning=FALSE}
+#Here we need the ID type entrez gene ID. We have this ID type in our Sircle_RCM DF, but in different column since we have not used this ID type for the merge (we used gene_name). Hnece we will summarise them here:
+Sircle_RCM_E <- Sircle_RCM %>%
+  mutate(entrezgene_id = coalesce(methDF_entrezgene_id, rnaDF_entrezgene_id, proteinDF_entrezgene_id))# Use coalesce to merge the columns while keeping non-NA value
+
+#Now we can do the ORA:
+SiRCleR::sircleORA(filename=Sircle_RCM_E,
+                   entrezId="entrezgene_id",
+                   regLabels = "RG3_Protein",
+                   emptyRegLabel = "None",
+                   RemoveBackgroundGenes = "TRUE",
+                   fileType = "pdf",
+                   minGSSize = 10,
+                   qvalueCutoff = 0.2,
+                   pvalueCutoff = 0.05,
+                   showCatagory = 30,
+                   OutputFileName = "ccRCC",
+                   Organism = "Human")
+
+```
+
+### Use your own pathway file
+If you want to use another pathway instead of GO-terms you can use [`sircleORAEnrich()`](). The only difference to the above is that you need to provide the pathway list, which you can for example obtain from MSigDB.
+
+## TF analysis on SiRCle clusters
+[`sircleORA_TF()`]()
+
+```{r, include=FALSE, eval=FALSE}
+#Get TF-regulon:
+
+
+
+#Run ORA
+SiRCle::sircleORA_TF(filename,
+                     regLabels = "RegulatoryLabels",
+                     emptyRegLabel = "",
+                     RemoveBackgroundGenes = "TRUE",
+                     enricher_geneID,
+                     enricher_Pathways,
+                     enricher_PathwayName = "",
+                     fileType = "pdf",
+                     minGSSize = 10,
+                     maxGSSize = 1000,
+                     Plot_p.adj = 0.2,
+                     Plot_Percentage = 10,
+                     OutputFileName = "")
+```
+
+
+# Session information
+```{r}
+sessionInfo()
+```
+

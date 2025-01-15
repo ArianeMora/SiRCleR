@@ -1,0 +1,4 @@
+"0","# Load the data from inst/extdata within the SiRCleR package:"
+"0","DNAmeth <- readRDS(system.file(""extdata"", ""DNAMethylation.rds"", package=""SiRCleR""))"
+"0","mRNA <- readRDS(system.file(""extdata"", ""RNAseq.rds"", package=""SiRCleR""))"
+"0","Proteomics <- readRDS(system.file(""extdata"", ""Proteomics.rds"", package=""SiRCleR""))"

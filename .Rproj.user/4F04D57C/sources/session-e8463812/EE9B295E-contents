@@ -1,0 +1,120 @@
+---
+title: "SiRCleR Tutorial"
+author:
+  - name: Ariane Mora
+  - name: Christina Schmidt
+output: 
+  html_document:
+    self_contained: true
+    toc: true
+    toc_float: true
+    toc_depth: 5
+    code_folding: show
+vignette: >
+  %\VignetteIndexEntry{SiRCleR Tutorial}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+bibliography: bibliography.bib
+editor_options:
+  chunk_output_type: console
+  markdown:
+    wrap: sentence
+---
+
+
+# Installation
+The latest development version of ***SiRCleR package*** can be install from [GitHub](https://github.com/ArianeMora/SiRCleR) with:
+```{r github_install, message=FALSE, warning=FALSE}
+#BiocManager::install("ArianeMora/SiRCleR")
+
+#For the latest development version use:
+devtools::install_github("https://github.com/ArianeMora/SiRCleR")
+devtools::load_all()
+
+library(SiRCleR)
+
+#load dependencies:
+library(tidyverse)
+```
+
+# Input Data
+Load example data:
+```{r}
+# Load the data from inst/extdata within the SiRCleR package:
+DNAmeth <- SiRCleR::ToyData("DNA_Methylation")
+mRNA <- SiRCleR::ToyData("RNAseq")
+Proteomics <- SiRCleR::ToyData("Proteomics")
+```
+
+# Run SiRCleR functions
+## Regulatory Clustering Model (RCM)
+Here we perform the SiRCle clustering using DNA-methylation, RNAseq and proteomics data and hence we use the function `sircleRCM_MRP()`, with MRP referring to DNA-***M***ethylation, ***R***NAseq and ***P***roteomics.\
+If you have different column names for Log2FC and p.adjusted value and/or want to use different cutoffs you will have to change parameters from default. Please check out vignette on how to choose the settings [`ChooseSettings`](https://ArianeMora.github.io/SiRCleR/articles/ChooseSettings.html) including the `Background Method`, `input data thresholds` and `Regulation Grouping` if anything is unclear.
+```{r, warning=FALSE, message=FALSE}
+SiRCleR::sircleRCM_MRP(methFile=DNAmeth,
+                      rnaFile=mRNA,
+                      protFile=Proteomics,
+                      geneID="gene_name",
+                      backgroundMethod="P|(M&R)",
+                      OutputFileName = "Sircle_RCM_MRP")
+```
+\
+In case you do not have DNA-methylation data, but only RNAseq and proteomics data, you can use the function `sircleRCM_RP()`, with RP referring to ***R***NAseq and ***P***roteomics.\
+```{r, warning=FALSE, message=FALSE}
+SiRCleR::sircleRCM_RP(rnaFile=mRNA,
+                      protFile=Proteomics,
+                      geneID="gene_name",
+                      backgroundMethod="P&R",
+                      OutputFileName = "Sircle_RCM_RP")
+```
+
+## Enrichment analysis on SiRCle clusters
+Dependent on the prior knowledge you choose to provide you will address different biological questions:\
+\
+1. **Gene-sets**: If you are interested in the biological processes or pathways that are altered in the SiRCle clusters, you can use gene-sets such as the Gene Ontology (GO) terms or Hallmarks that can be found on platforms such as MSigDB.\
+\
+2. **TF-regulon**: If you are interested in the transcription factors that are driving the changes in the SiRCle clusters, you can use the regulon information from platforms such as DecoupleR
+\
+With the function `sircleORA()` you can perform Over Representation Analysis (ORA) on each SiRCle cluster. Depending on the prior knowledge provided via the parameter `PriorKnowledge`, pathway enrichment analysis or transcription-factor activty estimation will be performed. \
+Here we perform Over Presentation Analysis (ORA) on each SiRCle clustser. This can be either done using the GO-terms signature for human or mouse data or by providing a pathway file of choice.\
+
+
+### Pathway enrichment analysis
+The Hallmarks gene-set is available in the package `SiRCle` and can be loaded using the function `ToyData()`.
+```{r, warning=FALSE}
+# Load a pathway file of interest:
+Hallmarks <- SiRCleR::ToyData("Hallmarks")
+
+# Run pathway enrichment analysis
+SiRCleR::sircleORA(InputData=Sircle_RCM_MRP,
+                   geneID= "geneID",
+                   regLabels="RG3_Protein",
+                   PriorKnowledge=Hallmarks,
+                   PKName="Hallmarks",
+                   minGSSize=5,
+                   maxGSSize=1000 ,
+                   Plot_p.adj=0.2,
+                   Plot_Percentage=5,
+                   OutputFileName='PathwayEnrichment')
+
+```
+
+### Transcription factor analysis
+
+```{r, warning=FALSE}
+# Load TF regulon:
+
+# load from decoupleR
+
+# Run transcription factor enrichment analysis
+
+```
+
+
+
+# Session information
+```{r session_info, echo=FALSE}
+options(width = 120)
+sessioninfo::session_info()
+```
+

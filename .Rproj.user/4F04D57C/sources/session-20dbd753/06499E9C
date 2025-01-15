@@ -1,0 +1,27 @@
+{
+    "id": "06499E9C",
+    "path": "~/GitHub/SiRCleR/vignettes/DataAnalysisExample.Rmd",
+    "project_path": "vignettes/DataAnalysisExample.Rmd",
+    "type": "r_markdown",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1736324962478.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "91,43",
+        "scrollLine": "42",
+        "chunk_output_type": "console"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1736341844,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1736341844020,
+    "read_only": false,
+    "read_only_alternatives": []
+}

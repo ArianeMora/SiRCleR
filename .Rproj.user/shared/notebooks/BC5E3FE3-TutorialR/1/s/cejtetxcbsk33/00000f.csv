@@ -1,0 +1,6 @@
+"0","sircle::sircleRCM_MRP(methFile=DNAmeth,"
+"0","                      rnaFile=mRNA,"
+"0","                      protFile=Proteomics,"
+"0","                      geneID=""gene_name"","
+"0","                      backgroundMethod=""P|(M&R)"","
+"0","                      OutputFileName = ""Sircle_RCM"")"
