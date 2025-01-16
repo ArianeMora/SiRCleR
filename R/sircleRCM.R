@@ -566,7 +566,7 @@ sircleRCM_RP <- function(rnaFile, protFile, geneID, rnaValueCol="Log2FC", rnaPad
     dplyr::mutate_at(c("proteinDF_Cutoff_Specific"), ~tidyr::replace_na(.,"Not Detected"))
 
   #Apply Background filter (label genes that will be removed based on choosen background)
-  if(backgroundMethod == "P|R)"){# P|R = Protein OR RNA
+  if(backgroundMethod == "P|R"){# P|R = Protein OR RNA
     MergeDF <- MergeDF%>%
       dplyr::mutate(BG_Method = dplyr::case_when(rnaDF_Detected=="TRUE" & proteinDF_Detected=="TRUE" ~ 'TRUE', # RNA & Protein
                                    rnaDF_Detected=="TRUE" & proteinDF_Detected=="FALSE" ~ 'TRUE', # Just RNA
