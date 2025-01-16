@@ -1,6 +1,6 @@
 Package: SiRCleR
 Title: Signature Regulatory Clustering
-Version: 1.1.0
+Version: 1.1.1
 Authors@R: c(
     person("Ariane", "Mora", , "ariane.n.mora@gmail.com", role = "aut"),
     person("Christina", "Schmidt", , "christina.schmidt@uni-heidelberg.de", role = c("aut", "cre"),
